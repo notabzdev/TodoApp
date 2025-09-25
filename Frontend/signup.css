@@ -6,6 +6,39 @@
     font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Top Logo - positioned to not interfere with main content */
+.top-logo {
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    z-index: 1000;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-logo:hover {
+    transform: scale(1.05);
+}
+
+.logo-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #e0b3ff 0%, #c084fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-family: "Inter", sans-serif;
+}
+
+.logo-subtitle {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: -3px;
+    font-weight: 300;
+}
+
 body {
     background: linear-gradient(135deg, #2d1b69 0%, #11071f 50%, #1a0b2e 100%);
     display: flex;
@@ -16,6 +49,24 @@ body {
     overflow-x: hidden;
     opacity: 0;
     transition: opacity 0.6s ease;
+    /* Hide scrollbar completely */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+body::-webkit-scrollbar {
+    display: none;
+}
+
+/* Ensure HTML also has no scrollbar */
+html {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+html::-webkit-scrollbar {
+    display: none;
 }
 
 /* Page fade animations */

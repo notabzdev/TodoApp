@@ -333,7 +333,14 @@ function fadeToPage(url) {
     document.body.classList.add('fade-out');
 
     setTimeout(() => {
-        window.location.href = url;
+        // Use server routes instead of direct HTML files
+        if (url === 'index.html') {
+            window.location.href = '/login';
+        } else if (url === 'signup.html') {
+            window.location.href = '/signup';
+        } else {
+            window.location.href = url;
+        }
     }, 600);
 }
 

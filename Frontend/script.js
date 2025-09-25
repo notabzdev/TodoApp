@@ -22,10 +22,19 @@ function validateEmail(email) {
     return re.test(email);
 }
 
+// Logo click handler
+function goToLanding() {
+    document.body.classList.remove('fade-in');
+    document.body.classList.add('fade-out');
+
+    setTimeout(function() {
+        window.location.href = '/';
+    }, 600);
+}
+
 // Social login handler
 function handleSocialLogin(provider) {
     console.log(`Signing in with ${provider}`);
-    // Add your social login integration here
 }
 
 // Main initialization
@@ -46,17 +55,15 @@ document.addEventListener("DOMContentLoaded", function() {
     const passwordInput = document.querySelector('input[type="password"]');
     const rememberCheckbox = document.getElementById('remember');
 
-    // Create account link click handler - SIMPLE AND CLEAN
+    // Create account link click handler
     createAccountLink.addEventListener('click', function(e) {
         e.preventDefault();
 
-        // Start fade out
         document.body.classList.remove('fade-in');
         document.body.classList.add('fade-out');
 
-        // Navigate after fade completes
         setTimeout(function() {
-            window.location.href = 'signup.html';
+            window.location.href = '/signup';
         }, 600);
     });
 
@@ -97,55 +104,124 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // Form submission
+    // REAL AUTHENTICATION - NO FAKE FALLBACK
     loginForm.addEventListener('submit', function(e) {
         e.preventDefault();
 
         const email = emailInput.value;
         const password = passwordInput.value;
 
-        // Validation
-        let hasErrors = false;
+        console.log('Login attempt:', email);
 
+        // Validation
         if (!validateEmail(email)) {
-            emailInput.className = 'error';
+            alert('Please enter a valid email address');
             emailInput.focus();
-            hasErrors = true;
+            return;
         }
 
         if (password.length < 6) {
-            passwordInput.className = 'error';
-            if (!hasErrors) passwordInput.focus();
-            hasErrors = true;
+            alert('Password must be at least 6 characters');
+            passwordInput.focus();
+            return;
         }
-
-        if (hasErrors) return;
 
         // Show loading state
         loginBtn.classList.add('loading');
         spinner.style.display = 'inline-block';
         btnText.textContent = 'Signing in...';
 
-        // Simulate API call
-        setTimeout(() => {
-            // Show success
-            loginBtn.style.background = 'linear-gradient(135deg, #51cf66 0%, #40c057 100%)';
-            btnText.textContent = 'Success!';
+        // ONLY call real authentication - no setTimeout fallback
+        authenticateUser(email, password);
+    });
 
-            // Handle remember me
-            if (rememberCheckbox.checked) {
-                localStorage.setItem('rememberedEmail', email);
+    // Real authentication function
+    async function authenticateUser(email, password) {
+        console.log('Making authentication request to server...');
+
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+            });
+
+            console.log('Server response status:', response.status);
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
             }
 
-            setTimeout(() => {
-                document.body.classList.remove('fade-in');
-                document.body.classList.add('fade-out');
+            const data = await response.json();
+            console.log('Authentication result:', data);
+
+            if (data.success && data.sessionToken) {
+                // Store session data
+                localStorage.setItem('sessionToken', data.sessionToken);
+                localStorage.setItem('userData', JSON.stringify(data.user));
+
+                // Handle remember me
+                if (rememberCheckbox.checked) {
+                    localStorage.setItem('rememberedEmail', email);
+                }
+
+                // Show success
+                loginBtn.style.background = 'linear-gradient(135deg, #51cf66 0%, #40c057 100%)';
+                btnText.textContent = 'Success!';
+
+                // Redirect only after successful authentication
                 setTimeout(() => {
-                    window.location.href = "dashboard.html";
-                }, 600);
-            }, 1000);
-        }, 1500);
-    });
+                    document.body.classList.remove('fade-in');
+                    document.body.classList.add('fade-out');
+                    setTimeout(() => {
+                        window.location.href = "dashboard.html";
+                    }, 600);
+                }, 800);
+
+            } else {
+                // Authentication failed
+                resetLoginForm();
+                alert(data.message || 'Invalid credentials. Please try again.');
+            }
+
+        } catch (error) {
+            console.error('Authentication error:', error);
+            resetLoginForm();
+            alert('Connection error. Please check your internet connection and try again.');
+        }
+    }
+
+    // Reset form on authentication failure
+    function resetLoginForm() {
+        loginBtn.classList.remove('loading');
+        spinner.style.display = 'none';
+        btnText.textContent = 'Sign In';
+        emailInput.style.borderColor = '#ff6b6b';
+        passwordInput.style.borderColor = '#ff6b6b';
+    }
+
+    // Load saved email
+    const rememberedEmail = localStorage.getItem('rememberedEmail');
+    const newAccountEmail = localStorage.getItem('newAccountEmail');
+
+    if (newAccountEmail) {
+        emailInput.value = newAccountEmail;
+        passwordInput.focus();
+        localStorage.removeItem('newAccountEmail');
+    } else if (rememberedEmail) {
+        emailInput.value = rememberedEmail;
+        rememberCheckbox.checked = true;
+        passwordInput.focus();
+    } else {
+        setTimeout(() => {
+            emailInput.focus();
+        }, 700);
+    }
 
     // Keyboard shortcuts
     document.addEventListener('keydown', function(e) {
@@ -161,17 +237,4 @@ document.addEventListener("DOMContentLoaded", function() {
             emailInput.focus();
         }
     });
-
-    // Load remembered email
-    const rememberedEmail = localStorage.getItem('rememberedEmail');
-    if (rememberedEmail) {
-        emailInput.value = rememberedEmail;
-        rememberCheckbox.checked = true;
-        passwordInput.focus();
-    } else {
-        // Auto-focus first input after fade-in
-        setTimeout(() => {
-            emailInput.focus();
-        }, 700);
-    }
 });
