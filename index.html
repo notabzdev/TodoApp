@@ -3,20 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login - TaskFlow</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="wave-background"></div>
+<!-- Animated background particles -->
+<div class="particles" id="particles"></div>
 
 <div class="login-container">
-    <h1 class="welcome">Welcome Back 👋<span class="wave"></span></h1>
+    <h1 class="welcome">Welcome Back</h1>
+    <p class="subtitle">Sign in to your account to continue</p>
+
     <form id="loginForm">
-        <input type="email" placeholder="Email" required>
-        <input type="password" placeholder="Password" required>
-        <button type="submit">Login</button>
-        <p class="signup-text">Don’t have an account? <a href="signup.html">Sign Up</a></p>
+        <div class="form-group">
+            <input type="email" placeholder="Email address" required>
+            <span class="input-icon">📧</span>
+        </div>
+
+        <div class="form-group">
+            <input type="password" placeholder="Password" required>
+            <span class="input-icon">🔒</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="checkbox-group">
+                <input type="checkbox" id="remember">
+                <label for="remember">Remember me</label>
+            </div>
+            <a href="#" class="forgot-password">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="login-btn">
+            <div class="spinner"></div>
+            <span class="btn-text">Sign In</span>
+        </button>
     </form>
+
+    <div class="social-divider">
+        <span>or continue with</span>
+    </div>
+
+    <button class="social-btn" onclick="handleSocialLogin('google')">
+        🔍 Continue with Google
+    </button>
+
+    <p class="signup-text">
+        Don't have an account? <a href="signup.html" id="createAccountLink">Create account</a>
+    </p>
 </div>
 
 <script src="script.js"></script>
