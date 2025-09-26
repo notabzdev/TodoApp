@@ -362,9 +362,9 @@ function authenticateUser(req, res, next) {
     }
 
     db.get(
-        `SELECT u.*, s.expires_at
-         FROM users u
-                  JOIN user_sessions s ON u.id = s.user_id
+        `SELECT u.*, s.expires_at 
+         FROM users u 
+         JOIN user_sessions s ON u.id = s.user_id 
          WHERE s.session_token = ? AND s.expires_at > datetime('now')`,
         [sessionToken],
         (err, user) => {
@@ -409,7 +409,8 @@ app.put('/api/user/theme', authenticateUser, (req, res) => {
     console.log('\n🎨 THEME UPDATE REQUEST');
     const { theme } = req.body;
 
-    if (!theme || !['galactic', 'corporate', 'nature', 'dark'].includes(theme)) {
+    // Updated to include new themes
+    if (!theme || !['galactic', 'corporate', 'nature', 'dark', 'sky', 'neon'].includes(theme)) {
         console.log('❌ Invalid theme:', theme);
         return res.status(400).json({
             success: false,
@@ -810,7 +811,7 @@ app.post('/api/subtasks', authenticateUser, (req, res) => {
 
             // Create subtask
             db.run(
-                `INSERT INTO subtasks (parent_task_id, title, completed, created_at) 
+                `INSERT INTO subtasks (parent_task_id, title, completed, created_at)
                  VALUES (?, ?, ?, datetime('now'))`,
                 [
                     parentTaskId,
@@ -864,9 +865,9 @@ app.put('/api/subtasks/:id', authenticateUser, (req, res) => {
 
     // First, verify subtask belongs to user (through parent task)
     db.get(
-        `SELECT s.*, t.user_id 
-         FROM subtasks s 
-         JOIN tasks t ON s.parent_task_id = t.id 
+        `SELECT s.*, t.user_id
+         FROM subtasks s
+                  JOIN tasks t ON s.parent_task_id = t.id
          WHERE s.id = ? AND t.user_id = ?`,
         [subtaskId, req.user.id],
         (err, subtask) => {
@@ -955,9 +956,9 @@ app.put('/api/subtasks/:id/toggle', authenticateUser, (req, res) => {
 
     // First, verify subtask belongs to user and get current state
     db.get(
-        `SELECT s.*, t.user_id 
-         FROM subtasks s 
-         JOIN tasks t ON s.parent_task_id = t.id 
+        `SELECT s.*, t.user_id
+         FROM subtasks s
+                  JOIN tasks t ON s.parent_task_id = t.id
          WHERE s.id = ? AND t.user_id = ?`,
         [subtaskId, req.user.id],
         (err, subtask) => {
@@ -1012,7 +1013,7 @@ app.delete('/api/subtasks/:id', authenticateUser, (req, res) => {
 
     // Verify subtask belongs to user (through parent task) and delete
     db.run(
-        `DELETE FROM subtasks 
+        `DELETE FROM subtasks
          WHERE id = ? AND parent_task_id IN (
              SELECT id FROM tasks WHERE user_id = ?
          )`,

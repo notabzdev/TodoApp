@@ -147,6 +147,22 @@ class TaskFlowDashboard {
                 headerColor: '#8b5cf6',
                 bgGradient: 'linear-gradient(135deg, #111827, #1f2937)',
                 taskColor: 'rgba(209, 213, 219, 0.7)'
+            },
+            {
+                id: 'sky',
+                name: 'Sky Dreams',
+                description: 'Peaceful clouds and azure skies',
+                headerColor: '#0ea5e9',
+                bgGradient: 'linear-gradient(135deg, #87CEEB, #E0F6FF)',
+                taskColor: 'rgba(30, 58, 138, 0.7)'
+            },
+            {
+                id: 'neon',
+                name: 'Neon City',
+                description: 'Cyberpunk vibes with electric colors',
+                headerColor: '#ff0080',
+                bgGradient: 'linear-gradient(135deg, #0a0a0a, #1a0a1a)',
+                taskColor: 'rgba(0, 255, 255, 0.6)'
             }
         ];
 
@@ -170,7 +186,7 @@ class TaskFlowDashboard {
         console.log('Applying theme:', theme);
 
         const body = document.body;
-        body.classList.remove('theme-galactic', 'theme-corporate', 'theme-nature', 'theme-dark');
+        body.classList.remove('theme-galactic', 'theme-corporate', 'theme-nature', 'theme-dark', 'theme-sky', 'theme-neon');
         body.classList.add(`theme-${theme}`);
         body.dataset.theme = theme;
 

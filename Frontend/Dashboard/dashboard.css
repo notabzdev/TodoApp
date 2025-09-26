@@ -86,6 +86,36 @@ html::-webkit-scrollbar {
     --gradient: linear-gradient(135deg, #8b5cf6, #06b6d4, #10b981);
 }
 
+/* NEW THEME: Sky Theme */
+.theme-sky {
+    --primary-bg: linear-gradient(135deg, #87CEEB 0%, #E0F6FF 50%, #87CEFA 100%);
+    --secondary-bg: rgba(135, 206, 235, 0.2);
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-primary: #1e3a8a;
+    --text-secondary: #3b82f6;
+    --accent-primary: #0ea5e9;
+    --accent-secondary: #38bdf8;
+    --accent-tertiary: #0284c7;
+    --border-color: rgba(14, 165, 233, 0.3);
+    --shadow: 0 8px 32px rgba(14, 165, 233, 0.3);
+    --gradient: linear-gradient(135deg, #0ea5e9, #38bdf8, #0284c7);
+}
+
+/* NEW THEME: Neon Cyberpunk Theme */
+.theme-neon {
+    --primary-bg: #0a0a0a;
+    --secondary-bg: rgba(0, 255, 255, 0.1);
+    --card-bg: rgba(0, 0, 0, 0.8);
+    --text-primary: #00ffff;
+    --text-secondary: #ff00ff;
+    --accent-primary: #ff0080;
+    --accent-secondary: #00ff80;
+    --accent-tertiary: #8000ff;
+    --border-color: rgba(0, 255, 255, 0.5);
+    --shadow: 0 0 20px rgba(255, 0, 128, 0.5);
+    --gradient: linear-gradient(135deg, #ff0080, #00ff80, #8000ff);
+}
+
 /* Body Background Effects */
 .theme-galactic {
     background: radial-gradient(circle at 20% 80%, #2d1b69 0%, transparent 50%),
@@ -106,19 +136,82 @@ html::-webkit-scrollbar {
     background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
 }
 
+.theme-sky {
+    background: linear-gradient(135deg, #87CEEB 0%, #E0F6FF 30%, #B0E0E6 70%, #87CEFA 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-neon {
+    background: radial-gradient(circle at 25% 25%, #ff0080 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, #00ff80 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, #8000ff 0%, transparent 50%),
+    linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 100%);
+    position: relative;
+}
+
+/* Sky theme animated clouds */
+.theme-sky::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+            radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.3) 20%, transparent 21%),
+            radial-gradient(circle at 60% 10%, rgba(255, 255, 255, 0.2) 15%, transparent 16%),
+            radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.25) 18%, transparent 19%),
+            radial-gradient(circle at 30% 60%, rgba(255, 255, 255, 0.2) 22%, transparent 23%),
+            radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.3) 25%, transparent 26%);
+    animation: float-clouds 20s ease-in-out infinite;
+    pointer-events: none;
+    z-index: -1;
+}
+
+@keyframes float-clouds {
+    0%, 100% { transform: translateX(0) translateY(0); }
+    25% { transform: translateX(10px) translateY(-5px); }
+    50% { transform: translateX(-5px) translateY(-10px); }
+    75% { transform: translateX(-10px) translateY(5px); }
+}
+
+/* Neon theme animated grid */
+.theme-neon::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+            linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: neon-pulse 4s ease-in-out infinite;
+    pointer-events: none;
+    z-index: -1;
+}
+
+@keyframes neon-pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.7; }
+}
+
 /* Modal Styles */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 100vh;
     background: rgba(0, 0, 0, 0.8);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
     backdrop-filter: blur(10px);
+    overflow: hidden;
 }
 
 .modal-overlay.hidden {
@@ -131,11 +224,19 @@ html::-webkit-scrollbar {
     border: 1px solid var(--border-color);
     border-radius: 20px;
     padding: 2rem;
-    max-width: 600px;
+    max-width: 700px;
     width: 90%;
-    max-height: 80vh;
+    max-height: 90vh;
     overflow-y: auto;
     box-shadow: var(--shadow);
+    /* Hide scrollbar completely */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.modal-container::-webkit-scrollbar {
+    display: none;
 }
 
 .modal-container h2 {
@@ -154,9 +255,10 @@ html::-webkit-scrollbar {
 /* Theme Selection */
 .theme-options {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 1rem;
     margin-bottom: 2rem;
+    padding: 0 0.5rem;
 }
 
 .theme-card {
@@ -206,6 +308,43 @@ html::-webkit-scrollbar {
     background: linear-gradient(135deg, #111827, #1f2937);
 }
 
+.sky-preview {
+    background: linear-gradient(135deg, #87CEEB, #E0F6FF);
+    position: relative;
+    overflow: hidden;
+}
+
+.sky-preview::after {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 20%;
+    width: 30px;
+    height: 15px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 20px;
+    box-shadow: 35px 5px 0 -5px rgba(255, 255, 255, 0.6);
+}
+
+.neon-preview {
+    background: linear-gradient(135deg, #0a0a0a, #1a0a1a);
+    position: relative;
+    overflow: hidden;
+}
+
+.neon-preview::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+            linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
 .preview-header {
     height: 20px;
     width: 100%;
@@ -227,6 +366,15 @@ html::-webkit-scrollbar {
 
 .dark-preview .preview-header {
     background: #8b5cf6;
+}
+
+.sky-preview .preview-header {
+    background: #0ea5e9;
+}
+
+.neon-preview .preview-header {
+    background: #ff0080;
+    box-shadow: 0 0 5px #ff0080;
 }
 
 .preview-content {
@@ -255,6 +403,15 @@ html::-webkit-scrollbar {
 
 .dark-preview .preview-task {
     background: rgba(209, 213, 219, 0.7);
+}
+
+.sky-preview .preview-task {
+    background: rgba(30, 58, 138, 0.7);
+}
+
+.neon-preview .preview-task {
+    background: rgba(0, 255, 255, 0.6);
+    box-shadow: 0 0 3px rgba(0, 255, 255, 0.8);
 }
 
 .preview-task:last-child {
@@ -295,6 +452,29 @@ html::-webkit-scrollbar {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
+}
+
+/* Enhanced modal for better height */
+#themeModal .modal-container {
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+#themeModal .theme-options {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    align-content: start;
+    margin: 2rem 0;
+}
+
+/* Ensure continue button is always visible */
+#themeModal .confirm-btn {
+    margin-top: auto;
+    min-height: 50px;
 }
 
 /* Dashboard Header */
@@ -623,33 +803,29 @@ html::-webkit-scrollbar {
     margin-bottom: 2rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border-color);
+    position: relative;
 }
 
 .workspace-header h2 {
     color: var(--text-primary);
     font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.workspace-header h2::before {
+    content: "🎯";
+    font-size: 1.2rem;
 }
 
 .workspace-controls {
     display: flex;
-    gap: 0.5rem;
-}
-
-.view-btn {
-    padding: 0.5rem 1rem;
-    background: transparent;
+    gap: 0.3rem;
+    background: var(--card-bg);
+    padding: 0.3rem;
+    border-radius: 10px;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.view-btn.active,
-.view-btn:hover {
-    background: var(--accent-primary);
-    color: white;
-    border-color: var(--accent-primary);
 }
 
 /* Tasks Container - Grid and List Views */
@@ -849,39 +1025,6 @@ html::-webkit-scrollbar {
 
 .tasks-container.list-view .task-card .task-type {
     font-size: 0.8rem;
-}
-
-/* Workspace header enhancements */
-.workspace-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-color);
-    position: relative;
-}
-
-.workspace-header h2 {
-    color: var(--text-primary);
-    font-size: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.workspace-header h2::before {
-    content: "🎯";
-    font-size: 1.2rem;
-}
-
-.workspace-controls {
-    display: flex;
-    gap: 0.3rem;
-    background: var(--card-bg);
-    padding: 0.3rem;
-    border-radius: 10px;
-    border: 1px solid var(--border-color);
 }
 
 /* Fixed welcome message positioning */
@@ -1566,6 +1709,23 @@ html::-webkit-scrollbar {
 .theme-dark .cancel-btn {
     background: #ef4444;
     box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+/* Fix subtask scrollbar issue */
+.subtasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 250px;
+    overflow-y: auto;
+    /* Hide scrollbar completely */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.subtasks-list::-webkit-scrollbar {
+    display: none;
 }
 
 /* Notification styles */
