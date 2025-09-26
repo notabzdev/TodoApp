@@ -99,18 +99,30 @@
     <div class="sidebar-section">
       <h3>Filters</h3>
       <div class="filter-options">
-        <label class="filter-option">
-          <input type="checkbox" checked> All Tasks
-        </label>
-        <label class="filter-option">
-          <input type="checkbox"> Completed
-        </label>
-        <label class="filter-option">
-          <input type="checkbox"> In Progress
-        </label>
-        <label class="filter-option">
-          <input type="checkbox"> High Priority
-        </label>
+        <div class="filter-option filter-all" data-filter="all">
+          <span class="filter-icon">📋</span>
+          <span class="filter-text">All Tasks</span>
+          <span class="filter-badge" id="allCount">0</span>
+          <input type="checkbox" checked>
+        </div>
+        <div class="filter-option filter-completed" data-filter="completed">
+          <span class="filter-icon">✅</span>
+          <span class="filter-text">Completed</span>
+          <span class="filter-badge" id="completedCount">0</span>
+          <input type="checkbox">
+        </div>
+        <div class="filter-option filter-in-progress" data-filter="in-progress">
+          <span class="filter-icon">⏳</span>
+          <span class="filter-text">In Progress</span>
+          <span class="filter-badge" id="inProgressCount">0</span>
+          <input type="checkbox">
+        </div>
+        <div class="filter-option filter-high-priority" data-filter="high-priority">
+          <span class="filter-icon">🔥</span>
+          <span class="filter-text">High Priority</span>
+          <span class="filter-badge" id="highPriorityCount">0</span>
+          <input type="checkbox">
+        </div>
       </div>
     </div>
   </div>
@@ -119,8 +131,8 @@
     <div class="workspace-header">
       <h2>My Workspace</h2>
       <div class="workspace-controls">
-        <button id="gridViewBtn" class="view-btn active">Grid</button>
-        <button id="listViewBtn" class="view-btn">List</button>
+        <button id="gridViewBtn" class="view-btn active" data-view="grid">Grid</button>
+        <button id="listViewBtn" class="view-btn" data-view="list">List</button>
       </div>
     </div>
 
