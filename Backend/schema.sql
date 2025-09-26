@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS user_sessions (
                                              FOREIGN KEY (user_id) REFERENCES users(id)
     );
 
--- Tasks table - NEW
+-- Tasks table
 CREATE TABLE IF NOT EXISTS tasks (
                                      id INTEGER PRIMARY KEY AUTOINCREMENT,
                                      user_id INTEGER NOT NULL,
@@ -40,4 +40,14 @@ CREATE TABLE IF NOT EXISTS tasks (
                                      due_date DATETIME,
                                      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                                      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
+-- Subtasks table - NEW
+CREATE TABLE IF NOT EXISTS subtasks (
+                                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                        parent_task_id INTEGER NOT NULL,
+                                        title TEXT NOT NULL,
+                                        completed BOOLEAN DEFAULT FALSE,
+                                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                                        FOREIGN KEY (parent_task_id) REFERENCES tasks(id) ON DELETE CASCADE
     );

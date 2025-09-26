@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TaskFlow Dashboard</title>
-  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="/Dashboard/dashboard.css">
+  <link rel="stylesheet" href="/Dashboard/dashboardtwo.css">
 </head>
 <body class="theme-galactic" data-theme="galactic">
 
@@ -15,53 +16,7 @@
     <p>Choose your preferred theme to get started:</p>
 
     <div class="theme-options">
-      <div class="theme-card" data-theme="galactic">
-        <div class="theme-preview galactic-preview">
-          <div class="preview-header"></div>
-          <div class="preview-content">
-            <div class="preview-task"></div>
-            <div class="preview-task"></div>
-          </div>
-        </div>
-        <h3>Galactic</h3>
-        <p>Cosmic design with stellar animations</p>
-      </div>
-
-      <div class="theme-card" data-theme="corporate">
-        <div class="theme-preview corporate-preview">
-          <div class="preview-header"></div>
-          <div class="preview-content">
-            <div class="preview-task"></div>
-            <div class="preview-task"></div>
-          </div>
-        </div>
-        <h3>Corporate</h3>
-        <p>Clean, professional interface</p>
-      </div>
-
-      <div class="theme-card" data-theme="nature">
-        <div class="theme-preview nature-preview">
-          <div class="preview-header"></div>
-          <div class="preview-content">
-            <div class="preview-task"></div>
-            <div class="preview-task"></div>
-          </div>
-        </div>
-        <h3>Nature</h3>
-        <p>Earthy tones with organic feel</p>
-      </div>
-
-      <div class="theme-card" data-theme="dark">
-        <div class="theme-preview dark-preview">
-          <div class="preview-header"></div>
-          <div class="preview-content">
-            <div class="preview-task"></div>
-            <div class="preview-task"></div>
-          </div>
-        </div>
-        <h3>Dark Mode</h3>
-        <p>Sleek dark interface, easy on the eyes</p>
-      </div>
+      <!-- Theme options will be dynamically generated -->
     </div>
 
     <button id="confirmTheme" class="confirm-btn" disabled>Continue</button>
@@ -154,21 +109,21 @@
     <form id="taskForm">
       <div class="form-group">
         <label for="taskTitle">Task Title</label>
-        <input type="text" id="taskTitle" required>
+        <input type="text" id="taskTitle" placeholder="Enter your task title..." required>
       </div>
 
       <div class="form-group">
         <label for="taskDescription">Description</label>
-        <textarea id="taskDescription" rows="3"></textarea>
+        <textarea id="taskDescription" rows="3" placeholder="Add a description (optional)..."></textarea>
       </div>
 
       <div class="form-row">
         <div class="form-group">
           <label for="taskPriority">Priority</label>
           <select id="taskPriority">
-            <option value="low">Low</option>
-            <option value="medium" selected>Medium</option>
-            <option value="high">High</option>
+            <option value="low">Low Priority</option>
+            <option value="medium" selected>Medium Priority</option>
+            <option value="high">High Priority</option>
           </select>
         </div>
 
@@ -183,11 +138,11 @@
         <div class="radio-group">
           <label class="radio-option">
             <input type="radio" name="taskType" value="individual" checked>
-            Individual Task
+            <span>Individual Task</span>
           </label>
           <label class="radio-option">
             <input type="radio" name="taskType" value="group">
-            Task Group
+            <span>Task Group</span>
           </label>
         </div>
       </div>
@@ -200,6 +155,9 @@
   </div>
 </div>
 
-<script src="dashboard.js"></script>
+<!-- UPDATED: Script paths for correct directory structure -->
+<script src="/Dashboard/dashboard.js"></script>
+<script src="/Dashboard/dashboardtwo.js"></script>
+<script src="/Dashboard/dashboardthree.js"></script>
 </body>
 </html>

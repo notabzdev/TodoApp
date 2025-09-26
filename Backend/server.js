@@ -21,10 +21,13 @@ app.use((req, res, next) => {
     next();
 });
 
-// Static file serving
-app.use(express.static(path.join(__dirname, '../frontend'), {
+// UPDATED: Static file serving for correct directory structure
+app.use(express.static(path.join(__dirname, '../Frontend'), {
     index: false
 }));
+
+// UPDATED: Add specific route for dashboard assets
+app.use('/Dashboard', express.static(path.join(__dirname, '../Frontend/Dashboard')));
 
 // Initialize SQLite Database
 const db = new sqlite3.Database('./database.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
@@ -359,9 +362,9 @@ function authenticateUser(req, res, next) {
     }
 
     db.get(
-        `SELECT u.*, s.expires_at 
-         FROM users u 
-         JOIN user_sessions s ON u.id = s.user_id 
+        `SELECT u.*, s.expires_at
+         FROM users u
+                  JOIN user_sessions s ON u.id = s.user_id
          WHERE s.session_token = ? AND s.expires_at > datetime('now')`,
         [sessionToken],
         (err, user) => {
@@ -507,7 +510,7 @@ app.post('/api/tasks', authenticateUser, (req, res) => {
         });
     }
 
-    console.log('📝 Task data:', {
+    console.log('🔍 Task data:', {
         title: title.trim(),
         description: description ? description.trim() : null,
         priority,
@@ -516,7 +519,7 @@ app.post('/api/tasks', authenticateUser, (req, res) => {
     });
 
     db.run(
-        `INSERT INTO tasks (user_id, title, description, priority, due_date, type, completed, created_at) 
+        `INSERT INTO tasks (user_id, title, description, priority, due_date, type, completed, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
         [
             req.user.id,
@@ -704,6 +707,342 @@ app.delete('/api/tasks/:id', authenticateUser, (req, res) => {
     );
 });
 
+// ====== SUBTASK ROUTES ======
+
+// Get subtasks for a specific group task
+app.get('/api/tasks/:taskId/subtasks', authenticateUser, (req, res) => {
+    console.log('\n📋 GETTING SUBTASKS for task:', req.params.taskId, 'user:', req.user.id);
+
+    const taskId = parseInt(req.params.taskId);
+
+    // First verify the parent task belongs to the user
+    db.get(
+        'SELECT * FROM tasks WHERE id = ? AND user_id = ? AND type = "group"',
+        [taskId, req.user.id],
+        (err, task) => {
+            if (err) {
+                console.error('❌ Error checking task ownership:', err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Database error'
+                });
+            }
+
+            if (!task) {
+                console.log('❌ Group task not found or not owned by user');
+                return res.status(404).json({
+                    success: false,
+                    message: 'Group task not found'
+                });
+            }
+
+            // Get subtasks for this group task
+            db.all(
+                'SELECT * FROM subtasks WHERE parent_task_id = ? ORDER BY created_at ASC',
+                [taskId],
+                (err, subtasks) => {
+                    if (err) {
+                        console.error('❌ Error fetching subtasks:', err);
+                        return res.status(500).json({
+                            success: false,
+                            message: 'Failed to fetch subtasks'
+                        });
+                    }
+
+                    console.log(`✅ Found ${subtasks.length} subtasks for task ${taskId}`);
+                    res.json({
+                        success: true,
+                        subtasks: subtasks
+                    });
+                }
+            );
+        }
+    );
+});
+
+// Create new subtask
+app.post('/api/subtasks', authenticateUser, (req, res) => {
+    console.log('\n📝 CREATING SUBTASK for user:', req.user.id);
+
+    const { parentTaskId, title } = req.body;
+
+    if (!title || title.trim().length === 0) {
+        console.log('❌ Missing subtask title');
+        return res.status(400).json({
+            success: false,
+            message: 'Subtask title is required'
+        });
+    }
+
+    if (!parentTaskId) {
+        console.log('❌ Missing parent task ID');
+        return res.status(400).json({
+            success: false,
+            message: 'Parent task ID is required'
+        });
+    }
+
+    // Verify parent task exists and belongs to user
+    db.get(
+        'SELECT * FROM tasks WHERE id = ? AND user_id = ? AND type = "group"',
+        [parentTaskId, req.user.id],
+        (err, parentTask) => {
+            if (err) {
+                console.error('❌ Error checking parent task:', err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Database error'
+                });
+            }
+
+            if (!parentTask) {
+                console.log('❌ Parent group task not found or not owned by user');
+                return res.status(404).json({
+                    success: false,
+                    message: 'Parent group task not found'
+                });
+            }
+
+            console.log('🔍 Subtask data:', {
+                title: title.trim(),
+                parentTaskId: parentTaskId
+            });
+
+            // Create subtask
+            db.run(
+                `INSERT INTO subtasks (parent_task_id, title, completed, created_at) 
+                 VALUES (?, ?, ?, datetime('now'))`,
+                [
+                    parentTaskId,
+                    title.trim(),
+                    false
+                ],
+                function(err) {
+                    if (err) {
+                        console.error('❌ Subtask creation failed:', err);
+                        return res.status(500).json({
+                            success: false,
+                            message: 'Failed to create subtask'
+                        });
+                    }
+
+                    const subtaskId = this.lastID;
+                    console.log(`✅ Subtask created with ID: ${subtaskId}`);
+
+                    // Fetch the created subtask to return it
+                    db.get(
+                        'SELECT * FROM subtasks WHERE id = ?',
+                        [subtaskId],
+                        (err, subtask) => {
+                            if (err) {
+                                console.error('❌ Error fetching created subtask:', err);
+                                return res.status(500).json({
+                                    success: false,
+                                    message: 'Subtask created but failed to fetch'
+                                });
+                            }
+
+                            res.status(201).json({
+                                success: true,
+                                message: 'Subtask created successfully',
+                                subtask: subtask
+                            });
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
+// Update subtask
+app.put('/api/subtasks/:id', authenticateUser, (req, res) => {
+    console.log('\n📝 UPDATING SUBTASK:', req.params.id, 'for user:', req.user.id);
+
+    const subtaskId = parseInt(req.params.id);
+    const { title, completed } = req.body;
+
+    // First, verify subtask belongs to user (through parent task)
+    db.get(
+        `SELECT s.*, t.user_id 
+         FROM subtasks s 
+         JOIN tasks t ON s.parent_task_id = t.id 
+         WHERE s.id = ? AND t.user_id = ?`,
+        [subtaskId, req.user.id],
+        (err, subtask) => {
+            if (err) {
+                console.error('❌ Error checking subtask ownership:', err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Database error'
+                });
+            }
+
+            if (!subtask) {
+                console.log('❌ Subtask not found or not owned by user');
+                return res.status(404).json({
+                    success: false,
+                    message: 'Subtask not found'
+                });
+            }
+
+            // Build update query dynamically
+            const updates = [];
+            const values = [];
+
+            if (title !== undefined) {
+                updates.push('title = ?');
+                values.push(title.trim());
+            }
+            if (completed !== undefined) {
+                updates.push('completed = ?');
+                values.push(completed ? 1 : 0);
+            }
+
+            if (updates.length === 0) {
+                console.log('❌ No valid fields to update');
+                return res.status(400).json({
+                    success: false,
+                    message: 'No valid fields to update'
+                });
+            }
+
+            values.push(subtaskId);
+
+            const query = `UPDATE subtasks SET ${updates.join(', ')} WHERE id = ?`;
+
+            db.run(query, values, function(err) {
+                if (err) {
+                    console.error('❌ Subtask update failed:', err);
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Failed to update subtask'
+                    });
+                }
+
+                console.log('✅ Subtask updated successfully');
+
+                // Return updated subtask
+                db.get(
+                    'SELECT * FROM subtasks WHERE id = ?',
+                    [subtaskId],
+                    (err, updatedSubtask) => {
+                        if (err) {
+                            console.error('❌ Error fetching updated subtask:', err);
+                            return res.status(500).json({
+                                success: false,
+                                message: 'Subtask updated but failed to fetch'
+                            });
+                        }
+
+                        res.json({
+                            success: true,
+                            message: 'Subtask updated successfully',
+                            subtask: updatedSubtask
+                        });
+                    }
+                );
+            });
+        }
+    );
+});
+
+// Toggle subtask completion
+app.put('/api/subtasks/:id/toggle', authenticateUser, (req, res) => {
+    console.log('\n🔄 TOGGLING SUBTASK:', req.params.id, 'for user:', req.user.id);
+
+    const subtaskId = parseInt(req.params.id);
+
+    // First, verify subtask belongs to user and get current state
+    db.get(
+        `SELECT s.*, t.user_id 
+         FROM subtasks s 
+         JOIN tasks t ON s.parent_task_id = t.id 
+         WHERE s.id = ? AND t.user_id = ?`,
+        [subtaskId, req.user.id],
+        (err, subtask) => {
+            if (err) {
+                console.error('❌ Error checking subtask ownership:', err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Database error'
+                });
+            }
+
+            if (!subtask) {
+                console.log('❌ Subtask not found or not owned by user');
+                return res.status(404).json({
+                    success: false,
+                    message: 'Subtask not found'
+                });
+            }
+
+            const newCompletedState = subtask.completed ? 0 : 1;
+
+            db.run(
+                'UPDATE subtasks SET completed = ? WHERE id = ?',
+                [newCompletedState, subtaskId],
+                function(err) {
+                    if (err) {
+                        console.error('❌ Subtask toggle failed:', err);
+                        return res.status(500).json({
+                            success: false,
+                            message: 'Failed to toggle subtask'
+                        });
+                    }
+
+                    console.log('✅ Subtask toggled successfully');
+
+                    res.json({
+                        success: true,
+                        message: 'Subtask toggled successfully',
+                        completed: newCompletedState === 1
+                    });
+                }
+            );
+        }
+    );
+});
+
+// Delete subtask
+app.delete('/api/subtasks/:id', authenticateUser, (req, res) => {
+    console.log('\n🗑️ DELETING SUBTASK:', req.params.id, 'for user:', req.user.id);
+
+    const subtaskId = parseInt(req.params.id);
+
+    // Verify subtask belongs to user (through parent task) and delete
+    db.run(
+        `DELETE FROM subtasks 
+         WHERE id = ? AND parent_task_id IN (
+             SELECT id FROM tasks WHERE user_id = ?
+         )`,
+        [subtaskId, req.user.id],
+        function(err) {
+            if (err) {
+                console.error('❌ Subtask deletion failed:', err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to delete subtask'
+                });
+            }
+
+            if (this.changes === 0) {
+                console.log('❌ Subtask not found or not owned by user');
+                return res.status(404).json({
+                    success: false,
+                    message: 'Subtask not found'
+                });
+            }
+
+            console.log('✅ Subtask deleted successfully');
+            res.json({
+                success: true,
+                message: 'Subtask deleted successfully'
+            });
+        }
+    );
+});
+
 // Debug endpoint
 app.get('/api/debug', (req, res) => {
     db.all('SELECT id, name, email, created_at FROM users ORDER BY created_at DESC', (err, users) => {
@@ -732,25 +1071,25 @@ app.get('/api/debug', (req, res) => {
     });
 });
 
-// Frontend routes
+// UPDATED: Frontend routes with correct paths
 app.get('/', (req, res) => {
     console.log('🏠 Serving landing page');
-    res.sendFile(path.join(__dirname, '../frontend/landing.html'));
+    res.sendFile(path.join(__dirname, '../Frontend/landing.html'));
 });
 
 app.get('/login', (req, res) => {
     console.log('🔐 Serving login page');
-    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+    res.sendFile(path.join(__dirname, '../Frontend/index.html'));
 });
 
 app.get('/signup', (req, res) => {
     console.log('📝 Serving signup page');
-    res.sendFile(path.join(__dirname, '../frontend/signup.html'));
+    res.sendFile(path.join(__dirname, '../Frontend/signup.html'));
 });
 
-app.get('/dashboard', authenticateUser, (req, res) => {
+app.get('/dashboard', (req, res) => {
     console.log('📊 Serving dashboard page');
-    res.sendFile(path.join(__dirname, '../frontend/dashboard.html'));
+    res.sendFile(path.join(__dirname, '../Frontend/Dashboard/dashboard.html'));
 });
 
 app.get('/favicon.ico', (req, res) => {

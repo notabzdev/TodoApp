@@ -179,7 +179,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     document.body.classList.remove('fade-in');
                     document.body.classList.add('fade-out');
                     setTimeout(() => {
-                        window.location.href = "dashboard.html";
+                        window.location.href = "/dashboard";
                     }, 600);
                 }, 800);
 
