@@ -1084,7 +1084,7 @@ app.get('/login', (req, res) => {
 });
 
 app.get('/signup', (req, res) => {
-    console.log('📝 Serving signup page');
+    console.log('🔐 Serving signup page');
     res.sendFile(path.join(__dirname, '../Frontend/signup.html'));
 });
 
@@ -1097,7 +1097,8 @@ app.get('/favicon.ico', (req, res) => {
     res.status(204).send();
 });
 
-app.get('*', (req, res) => {
+// Handle 404 - must be last route (FIXED)
+app.use((req, res) => {
     console.log(`❓ Unmatched route: ${req.path}`);
     res.status(404).send(`Route not found: ${req.path}`);
 });
@@ -1107,7 +1108,7 @@ app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
     console.log(`🏠 Landing: http://localhost:${PORT}`);
     console.log(`🔐 Login: http://localhost:${PORT}/login`);
-    console.log(`📝 Signup: http://localhost:${PORT}/signup`);
+    console.log(`🔐 Signup: http://localhost:${PORT}/signup`);
     console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
     console.log(`🔧 Debug: http://localhost:${PORT}/api/debug`);
 });
