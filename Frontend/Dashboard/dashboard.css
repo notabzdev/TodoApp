@@ -2048,3 +2048,232 @@ html::-webkit-scrollbar {
         max-height: 500px;
     }
 }
+/* ===== ADD TO dashboard.css - BIDIRECTIONAL RESIZE ===== */
+
+/* Bidirectional resize handle (both width and height) */
+.resize-handle-bidirectional {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 24px;
+    height: 24px;
+    background: var(--accent-primary);
+    cursor: nwse-resize !important;
+    border-radius: 4px 0 12px 0;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    user-select: none;
+    pointer-events: auto !important;
+}
+
+.task-card:hover .resize-handle-bidirectional {
+    opacity: 0.7;
+}
+
+.resize-handle-bidirectional:hover {
+    opacity: 1 !important;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.4);
+}
+
+.resize-handle-bidirectional.resizing {
+    opacity: 1 !important;
+    transform: scale(1.2);
+    background: var(--accent-secondary);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.6);
+}
+
+/* Allow width changes in fluid mode */
+body.fluid-mode .task-card {
+    min-width: 250px;
+    max-width: 600px;
+}
+/* ===== ADD/REPLACE IN dashboard.css - COMPLETE PIN FEATURE STYLES ===== */
+
+/* Pinned task indicator - Top right badge */
+.task-card.pinned::before {
+    content: '📌';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: var(--accent-primary);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.5);
+    animation: pin-bounce 0.5s ease-out;
+    border: 3px solid var(--primary-bg);
+}
+
+/* Pin bounce animation */
+@keyframes pin-bounce {
+    0% {
+        transform: scale(0) rotate(-45deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2) rotate(10deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+/* Pinned task gets elevated styling */
+.task-card.pinned {
+    border: 2px solid var(--accent-primary);
+    box-shadow: 0 8px 32px rgba(219, 39, 119, 0.3);
+    position: relative;
+}
+
+/* Pinned task in grid view - move to top visually */
+.tasks-container.grid-view .task-card.pinned {
+    order: -1; /* Moves to beginning of flex/grid */
+}
+
+/* Pinned task hover effect */
+.task-card.pinned:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 40px rgba(219, 39, 119, 0.4);
+}
+
+/* Theme-specific pin colors */
+.theme-corporate .task-card.pinned::before {
+    background: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+}
+
+.theme-nature .task-card.pinned::before {
+    background: #84cc16;
+    box-shadow: 0 4px 12px rgba(132, 204, 22, 0.5);
+}
+
+.theme-dark .task-card.pinned::before {
+    background: #8b5cf6;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
+}
+
+.theme-sky .task-card.pinned::before {
+    background: #0ea5e9;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.5);
+}
+
+.theme-neon .task-card.pinned::before {
+    background: #ff0080;
+    box-shadow: 0 4px 12px rgba(255, 0, 128, 0.8);
+}
+
+/* Pinned section divider (optional - adds visual separation) */
+.tasks-container.grid-view::after {
+    content: '';
+    grid-column: 1 / -1;
+    height: 2px;
+    background: linear-gradient(to right, transparent, var(--border-color), transparent);
+    margin: 1rem 0;
+    order: 0;
+}
+/* CRITICAL: Force all tasks to be absolutely positioned in fluid mode */
+body.fluid-mode .task-card {
+    position: absolute !important;
+    /* Tasks should NOT be in document flow */
+}
+
+/* Ensure tasks don't affect each other's layout */
+body.fluid-mode .tasks-container {
+    position: relative;
+    /* Container needs to be positioned for absolute children */
+}
+
+/* Remove any flexbox/grid that might interfere */
+body.fluid-mode .tasks-container.grid-view,
+body.fluid-mode .tasks-container.list-view {
+    display: block !important;
+    /* No grid or flex in fluid mode */
+}
+
+/* Prevent task content from expanding container */
+body.fluid-mode .task-card * {
+    max-width: 100%;
+    /* Prevent overflow issues */
+}
+/* ===== ADD TO dashboard.css - BI-DIRECTIONAL RESIZE FOR FLUID MODE ===== */
+
+/* Fluid mode resize handle (diagonal - resizes both width and height) */
+.resize-handle-fluid {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 24px;
+    height: 24px;
+    background: var(--accent-primary);
+    cursor: nwse-resize !important;
+    border-radius: 4px 0 12px 0;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    user-select: none;
+    pointer-events: auto !important;
+}
+
+.task-card:hover .resize-handle-fluid {
+    opacity: 0.7;
+}
+
+.resize-handle-fluid:hover {
+    opacity: 1 !important;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.4);
+}
+
+.resize-handle-fluid.resizing {
+    opacity: 1 !important;
+    transform: scale(1.2);
+    background: var(--accent-secondary);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.6);
+}
+
+/* Allow width changes in fluid mode */
+body.fluid-mode .task-card {
+    min-width: 250px;
+    max-width: 600px;
+    width: 300px; /* Default width */
+}
+
+/* Theme-specific fluid resize colors */
+.theme-corporate .resize-handle-fluid {
+    background: #3b82f6;
+}
+
+.theme-nature .resize-handle-fluid {
+    background: #84cc16;
+}
+
+.theme-dark .resize-handle-fluid {
+    background: #8b5cf6;
+}
+
+.theme-sky .resize-handle-fluid {
+    background: #0ea5e9;
+}
+
+.theme-neon .resize-handle-fluid {
+    background: #ff0080;
+    box-shadow: 0 0 10px rgba(255, 0, 128, 0.6);
+}

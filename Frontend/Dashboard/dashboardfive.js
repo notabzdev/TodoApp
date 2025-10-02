@@ -1,45 +1,55 @@
-// Fluid Mode Dragging and Positioning - dashboardfive.js
-// Task dragging, collision detection, and positioning functionality
+// ===== COMPLETE FLUID MODE FEATURES =====
+// Replace ENTIRE dashboardfive.js with this
 
 Object.assign(TaskFlowDashboard.prototype, {
+    // ========== DRAGGING ==========
     makeTasksDraggable() {
         const tasks = document.querySelectorAll('.task-card');
         tasks.forEach(task => this.makeSingleTaskDraggable(task));
+        console.log(`Made ${tasks.length} tasks draggable`);
     },
 
     makeSingleTaskDraggable(taskElement) {
-        let isDragging = false;
-        let offsetX = 0;
-        let offsetY = 0;
-        let animationFrame = null;
+        if (taskElement._isDraggable) return;
 
-        const positionInfo = document.createElement('div');
-        positionInfo.className = 'task-position-info';
-        taskElement.appendChild(positionInfo);
+        // Check if task is pinned
+        if (taskElement.classList.contains('pinned')) {
+            taskElement.style.cursor = 'not-allowed';
+            taskElement.title = 'Task is pinned - right-click to unpin';
+            return; // Don't make pinned tasks draggable
+        }
+
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let initialLeft = 0;
+        let initialTop = 0;
 
         const handleMouseDown = (e) => {
-            if (e.target.closest('button') || e.target.closest('input') || e.target.closest('textarea')) {
+            // Don't drag pinned tasks
+            if (taskElement.classList.contains('pinned')) {
+                return;
+            }
+
+            // Don't drag if clicking interactive elements
+            if (e.target.closest('button') ||
+                e.target.closest('input') ||
+                e.target.closest('textarea') ||
+                e.target.closest('.resize-handle-fluid') ||
+                e.target.closest('[contenteditable="true"]')) {
                 return;
             }
 
             isDragging = true;
-            this.draggedTask = taskElement;
-
-            const rect = taskElement.getBoundingClientRect();
-            offsetX = e.clientX - rect.left;
-            offsetY = e.clientY - rect.top;
-
-            this.lastValidPosition = {
-                x: parseInt(taskElement.style.left) || 0,
-                y: parseInt(taskElement.style.top) || 0
-            };
+            startX = e.clientX;
+            startY = e.clientY;
+            initialLeft = parseInt(taskElement.style.left) || 0;
+            initialTop = parseInt(taskElement.style.top) || 0;
 
             taskElement.classList.add('dragging');
+            taskElement.style.cursor = 'grabbing';
             document.body.style.userSelect = 'none';
             document.body.style.cursor = 'grabbing';
-
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
 
             e.preventDefault();
         };
@@ -47,187 +57,242 @@ Object.assign(TaskFlowDashboard.prototype, {
         const handleMouseMove = (e) => {
             if (!isDragging) return;
 
-            if (animationFrame) {
-                cancelAnimationFrame(animationFrame);
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+
+            let newLeft = initialLeft + deltaX;
+            let newTop = initialTop + deltaY;
+
+            // Constrain to container
+            const container = document.querySelector('.tasks-container');
+            if (container) {
+                const containerRect = container.getBoundingClientRect();
+                const taskWidth = taskElement.offsetWidth;
+                const taskHeight = taskElement.offsetHeight;
+
+                const padding = 10;
+                newLeft = Math.max(padding, Math.min(newLeft, containerRect.width - taskWidth - padding));
+                newTop = Math.max(padding, Math.min(newTop, containerRect.height - taskHeight - padding));
             }
 
-            animationFrame = requestAnimationFrame(() => {
-                let newX = e.clientX - offsetX;
-                let newY = e.clientY - offsetY;
+            taskElement.style.left = newLeft + 'px';
+            taskElement.style.top = newTop + 'px';
 
-                const workspace = document.querySelector('.workspace');
-                const workspaceRect = workspace.getBoundingClientRect();
-
-                newX = newX - workspaceRect.left;
-                newY = newY - workspaceRect.top - 80;
-
-                const maxX = workspaceRect.width - taskElement.offsetWidth;
-                const maxY = workspaceRect.height - 80 - taskElement.offsetHeight;
-
-                newX = Math.max(0, Math.min(newX, maxX));
-                newY = Math.max(0, Math.min(newY, maxY));
-
-                if (this.isGridVisible) {
-                    newX = Math.round(newX / this.gridSize) * this.gridSize;
-                    newY = Math.round(newY / this.gridSize) * this.gridSize;
-                }
-
-                const screenX = newX + workspaceRect.left;
-                const screenY = newY + workspaceRect.top + 80;
-
-                const hoveredTask = this.getHoveredTask(screenX, screenY, taskElement);
-                const wouldCollide = this.checkCollisions(screenX, screenY, taskElement);
-
-                this.updateHoverStates(hoveredTask, taskElement);
-
-                taskElement.style.left = newX + 'px';
-                taskElement.style.top = newY + 'px';
-
-                taskElement.classList.toggle('collision-warning', wouldCollide);
-
-                positionInfo.textContent = `${Math.round(newX)}, ${Math.round(newY)}`;
-            });
+            this.checkTaskCollisions(taskElement);
         };
 
         const handleMouseUp = () => {
             if (!isDragging) return;
 
             isDragging = false;
-            this.draggedTask = null;
-
-            if (animationFrame) {
-                cancelAnimationFrame(animationFrame);
-            }
-
-            const workspace = document.querySelector('.workspace');
-            const workspaceRect = workspace.getBoundingClientRect();
-            const currentX = parseInt(taskElement.style.left) + workspaceRect.left;
-            const currentY = parseInt(taskElement.style.top) + workspaceRect.top + 80;
-
-            const wouldCollide = this.checkCollisions(currentX, currentY, taskElement);
-
-            if (wouldCollide) {
-                this.shakeAndReturnTask(taskElement);
-            } else {
-                this.lastValidPosition = {
-                    x: parseInt(taskElement.style.left),
-                    y: parseInt(taskElement.style.top)
-                };
-                this.saveTaskPosition(taskElement);
-            }
-
-            taskElement.classList.remove('dragging', 'collision-warning');
-            this.clearAllHoverStates();
+            taskElement.classList.remove('dragging');
+            taskElement.style.cursor = 'grab';
             document.body.style.userSelect = '';
             document.body.style.cursor = '';
 
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
+            this.saveTaskPosition(taskElement);
+
+            document.querySelectorAll('.task-card').forEach(t => {
+                t.classList.remove('collision-warning', 'being-hovered', 'hovering-over-task');
+            });
         };
 
         taskElement.addEventListener('mousedown', handleMouseDown);
-        taskElement.style.cursor = 'grab';
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
 
         taskElement._cleanupDraggable = () => {
             taskElement.removeEventListener('mousedown', handleMouseDown);
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
-            if (positionInfo.parentNode) positionInfo.remove();
         };
+
+        taskElement._isDraggable = true;
+        taskElement.style.cursor = 'grab';
     },
 
-    getHoveredTask(x, y, draggingTask) {
-        const tasks = document.querySelectorAll('.task-card:not(.dragging)');
+    checkTaskCollisions(draggedTask) {
+        const draggedRect = draggedTask.getBoundingClientRect();
+        let hasCollision = false;
 
-        for (let task of tasks) {
-            const rect = task.getBoundingClientRect();
-            if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-                return task;
-            }
-        }
-        return null;
-    },
-
-    updateHoverStates(hoveredTask, draggingTask) {
-        this.clearAllHoverStates();
-
-        if (hoveredTask) {
-            hoveredTask.classList.add('being-hovered');
-            draggingTask.classList.add('hovering-over-task');
-            this.isHoveringOverTask = true;
-        } else {
-            this.isHoveringOverTask = false;
-        }
-    },
-
-    clearAllHoverStates() {
         document.querySelectorAll('.task-card').forEach(task => {
-            task.classList.remove('being-hovered', 'hovering-over-task');
+            if (task === draggedTask) return;
+
+            const taskRect = task.getBoundingClientRect();
+
+            const isColliding = !(
+                draggedRect.right < taskRect.left ||
+                draggedRect.left > taskRect.right ||
+                draggedRect.bottom < taskRect.top ||
+                draggedRect.top > taskRect.bottom
+            );
+
+            if (isColliding) {
+                hasCollision = true;
+                task.classList.add('being-hovered');
+                draggedTask.classList.add('hovering-over-task');
+            } else {
+                task.classList.remove('being-hovered');
+            }
         });
-        this.isHoveringOverTask = false;
+
+        if (hasCollision) {
+            draggedTask.classList.add('collision-warning');
+        } else {
+            draggedTask.classList.remove('collision-warning', 'hovering-over-task');
+        }
     },
 
-    shakeAndReturnTask(taskElement) {
-        taskElement.classList.add('shake-animation');
+    // ========== WIDTH + HEIGHT RESIZE ==========
+    addFluidResizeHandle(taskCard) {
+        // Remove any old handles
+        const oldHandles = taskCard.querySelectorAll('.resize-handle, .resize-handle-fluid');
+        oldHandles.forEach(h => h.remove());
 
-        taskElement.style.transition = 'all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
-        taskElement.style.left = this.lastValidPosition.x + 'px';
-        taskElement.style.top = this.lastValidPosition.y + 'px';
+        // Create bi-directional handle
+        const handle = document.createElement('div');
+        handle.className = 'resize-handle-fluid';
+        handle.innerHTML = '⋰';
+        handle.title = 'Drag to resize';
 
-        setTimeout(() => {
-            taskElement.classList.remove('shake-animation');
-            taskElement.style.transition = '';
-        }, 600);
+        const dimensions = document.createElement('div');
+        dimensions.className = 'resize-dimensions';
+        dimensions.style.cssText = `
+            position: absolute;
+            top: -35px;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 101;
+            transition: opacity 0.2s;
+        `;
 
-        this.showNotification('Cannot place task there - position blocked!', 'error');
-    },
+        taskCard.appendChild(handle);
+        taskCard.appendChild(dimensions);
 
-    checkCollisions(x, y, taskElement) {
-        const taskRect = {
-            left: x,
-            top: y,
-            right: x + taskElement.offsetWidth,
-            bottom: y + taskElement.offsetHeight
+        const isGroup = taskCard.classList.contains('task-group');
+        const minHeight = isGroup ? 250 : 180;
+        const maxHeight = 800;
+        const minWidth = 250;
+        const maxWidth = 800;
+
+        let isResizing = false;
+        let startX, startY, initialWidth, initialHeight;
+
+        handle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            isResizing = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            initialWidth = taskCard.offsetWidth;
+            initialHeight = taskCard.offsetHeight;
+
+            handle.classList.add('resizing');
+            taskCard.classList.add('resizing');
+            document.body.style.cursor = 'nwse-resize';
+            document.body.style.userSelect = 'none';
+            dimensions.style.opacity = '1';
+
+            console.log(`Starting resize from: ${initialWidth}×${initialHeight}px`);
+        });
+
+        const handleMouseMove = (e) => {
+            if (!isResizing) return;
+
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+
+            let newWidth = initialWidth + deltaX;
+            let newHeight = initialHeight + deltaY;
+
+            // Apply constraints
+            newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+            newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+
+            // CRITICAL: Apply to the element
+            taskCard.style.width = newWidth + 'px';
+            taskCard.style.height = newHeight + 'px';
+            dimensions.textContent = `${Math.round(newWidth)} × ${Math.round(newHeight)}px`;
         };
 
-        const otherTasks = document.querySelectorAll('.task-card:not(.dragging)');
+        const handleMouseUp = () => {
+            if (!isResizing) return;
 
-        for (let otherTask of otherTasks) {
-            const otherRect = otherTask.getBoundingClientRect();
-            const otherBounds = {
-                left: otherRect.left - this.collisionPadding,
-                top: otherRect.top - this.collisionPadding,
-                right: otherRect.right + this.collisionPadding,
-                bottom: otherRect.bottom + this.collisionPadding
-            };
+            isResizing = false;
+            handle.classList.remove('resizing');
+            taskCard.classList.remove('resizing');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            dimensions.style.opacity = '0';
 
-            if (taskRect.left < otherBounds.right &&
-                taskRect.right > otherBounds.left &&
-                taskRect.top < otherBounds.bottom &&
-                taskRect.bottom > otherBounds.top) {
-                return true;
-            }
-        }
+            const finalWidth = taskCard.offsetWidth;
+            const finalHeight = taskCard.offsetHeight;
 
-        return false;
-    },
+            console.log(`✅ Resized to: ${finalWidth}×${finalHeight}px`);
 
-    removeTaskDraggable() {
-        const tasks = document.querySelectorAll('.task-card');
-        tasks.forEach(task => {
-            if (task._cleanupDraggable) {
-                task._cleanupDraggable();
-                delete task._cleanupDraggable;
-            }
-            task.style.position = '';
-            task.style.left = '';
-            task.style.top = '';
-            task.style.cursor = '';
-            task.style.transition = '';
-            task.classList.remove('dragging', 'collision-warning', 'being-hovered', 'hovering-over-task');
+            this.saveFluidTaskSize(taskCard, finalWidth, finalHeight);
+
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        handle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
         });
     },
 
+    saveFluidTaskSize(taskCard, width, height) {
+        const taskId = taskCard.dataset.taskId;
+        if (!taskId || !this.currentUser) return;
+
+        if (!this.fluidTaskSizes) {
+            this.fluidTaskSizes = new Map();
+        }
+
+        this.fluidTaskSizes.set(taskId, { width, height, timestamp: Date.now(), userId: this.currentUser.id });
+
+        const key = `taskflow-fluid-sizes-${this.currentUser.id}`;
+        const data = Object.fromEntries(this.fluidTaskSizes);
+        localStorage.setItem(key, JSON.stringify(data));
+
+        console.log(`💾 Fluid size saved: ${width}×${height}px`);
+    },
+
+    loadFluidTaskSize(taskCard) {
+        const taskId = taskCard.dataset.taskId;
+        if (!taskId || !this.currentUser) return;
+
+        const key = `taskflow-fluid-sizes-${this.currentUser.id}`;
+        const saved = localStorage.getItem(key);
+
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                const sizeData = data[taskId];
+
+                if (sizeData) {
+                    taskCard.style.width = sizeData.width + 'px';
+                    taskCard.style.height = sizeData.height + 'px';
+                    console.log(`📂 Loaded fluid size: ${sizeData.width}×${sizeData.height}px`);
+                }
+            } catch (error) {
+                console.error('Error loading fluid sizes:', error);
+            }
+        }
+    },
+
+    // ========== POSITIONING ==========
     saveTaskPosition(taskElement) {
         const taskId = taskElement.dataset.taskId;
         const position = {
@@ -239,213 +304,123 @@ Object.assign(TaskFlowDashboard.prototype, {
 
         this.taskPositions.set(taskId, position);
         this.saveTaskPositionsToStorage();
-
-        console.log(`Position saved for task ${taskId}:`, position);
     },
 
     loadTaskPositions() {
         const tasks = document.querySelectorAll('.task-card');
-        const workspace = document.querySelector('.workspace');
-        const workspaceRect = workspace?.getBoundingClientRect();
 
-        if (!workspaceRect) {
-            console.warn('Workspace not found, deferring position loading');
-            setTimeout(() => this.loadTaskPositions(), 100);
-            return;
-        }
+        if (tasks.length === 0) return;
 
         let positionsLoaded = 0;
-        const occupiedPositions = new Set();
+        let autoPositioned = 0;
 
-        tasks.forEach((task) => {
+        tasks.forEach((task, index) => {
             const taskId = task.dataset.taskId;
             const savedPosition = this.taskPositions.get(taskId);
 
-            if (savedPosition && this.isValidPosition(savedPosition, workspaceRect)) {
-                const posKey = `${savedPosition.x},${savedPosition.y}`;
-                if (!occupiedPositions.has(posKey)) {
-                    task.style.position = 'absolute';
-                    task.style.left = savedPosition.x + 'px';
-                    task.style.top = savedPosition.y + 'px';
-                    occupiedPositions.add(posKey);
-                    positionsLoaded++;
-                    console.log(`Loaded position for task ${taskId}:`, savedPosition);
-                } else {
-                    console.log(`Position conflict for task ${taskId}, will auto-position`);
-                }
-            }
-        });
+            task.style.position = 'absolute';
 
-        let autoPositionIndex = 0;
-        tasks.forEach((task) => {
-            const taskId = task.dataset.taskId;
-            const savedPosition = this.taskPositions.get(taskId);
-            const posKey = savedPosition ? `${savedPosition.x},${savedPosition.y}` : null;
+            if (savedPosition) {
+                task.style.left = savedPosition.x + 'px';
+                task.style.top = savedPosition.y + 'px';
+                positionsLoaded++;
+            } else {
+                const x = 100 + (autoPositioned * 50);
+                const y = 100 + (autoPositioned * 50);
 
-            if (!savedPosition || !this.isValidPosition(savedPosition, workspaceRect) ||
-                (posKey && occupiedPositions.has(posKey) && task.style.position !== 'absolute')) {
-                this.autoPositionTask(task, autoPositionIndex, occupiedPositions);
-                autoPositionIndex++;
-            }
-        });
-
-        console.log(`Loaded ${positionsLoaded} saved positions, auto-positioned ${autoPositionIndex} tasks`);
-    },
-
-    isValidPosition(position, workspaceRect) {
-        if (!position || typeof position.x !== 'number' || typeof position.y !== 'number') {
-            return false;
-        }
-
-        if (workspaceRect) {
-            const maxX = workspaceRect.width - 300;
-            const maxY = workspaceRect.height - 200;
-
-            if (position.x < 0 || position.y < 0 || position.x > maxX || position.y > maxY) {
-                return false;
-            }
-        }
-
-        return true;
-    },
-
-    autoPositionTask(task, index, occupiedPositions = new Set()) {
-        const workspace = document.querySelector('.workspace');
-        const workspaceRect = workspace.getBoundingClientRect();
-
-        const taskWidth = task.classList.contains('task-group') ? 400 : 300;
-        const taskHeight = task.classList.contains('task-group') ? 280 : 200;
-        const padding = 20;
-
-        // Account for floating action bar space (7rem = ~112px)
-        const availableWidth = workspaceRect.width - 112 - padding;
-        const cols = Math.floor(availableWidth / (taskWidth + padding));
-        let row = Math.floor(index / cols);
-        let col = index % cols;
-
-        let attempts = 0;
-        let positioned = false;
-
-        while (!positioned && attempts < 100) {
-            const x = col * (taskWidth + padding) + padding + 112; // Add space for floating bar
-            const y = row * (taskHeight + padding) + padding;
-            const posKey = `${x},${y}`;
-
-            if (!occupiedPositions.has(posKey)) {
-                task.style.position = 'absolute';
                 task.style.left = x + 'px';
                 task.style.top = y + 'px';
-                occupiedPositions.add(posKey);
-                this.saveTaskPosition(task);
-                positioned = true;
-                console.log(`Auto-positioned task ${task.dataset.taskId} at ${x}, ${y}`);
-            } else {
-                col++;
-                if (col >= cols) {
-                    col = 0;
-                    row++;
-                }
-                attempts++;
-            }
-        }
 
-        if (!positioned) {
-            console.warn(`Failed to auto-position task ${task.dataset.taskId} after ${attempts} attempts`);
-        }
+                autoPositioned++;
+            }
+        });
+
+        console.log(`Loaded ${positionsLoaded} saved positions, auto-positioned ${autoPositioned} tasks`);
+
+        this.reEnhanceFluidTasks();
+    },
+
+    reEnhanceFluidTasks() {
+        setTimeout(() => {
+            const taskCards = document.querySelectorAll('.task-card');
+
+            taskCards.forEach(card => {
+                // Add FLUID resize (bi-directional)
+                if (!card.querySelector('.resize-handle-fluid')) {
+                    this.addFluidResizeHandle(card);
+                    this.loadFluidTaskSize(card);
+                }
+
+                if (!card._contextMenuHandler && this.addContextMenuToTask) {
+                    this.addContextMenuToTask(card);
+                }
+
+                if (!card.dataset.enhanced && this.enhanceTaskCard) {
+                    this.enhanceTaskCard(card);
+                }
+            });
+
+            if (this.loadPinnedStates) {
+                this.loadPinnedStates();
+            }
+
+            console.log(`✨ Re-enhanced ${taskCards.length} fluid tasks (width + height resize enabled)`);
+        }, 100);
+    },
+
+    removeTaskDraggable() {
+        document.querySelectorAll('.task-card').forEach(task => {
+            if (task._cleanupDraggable) {
+                task._cleanupDraggable();
+                delete task._cleanupDraggable;
+                delete task._isDraggable;
+            }
+            task.style.position = '';
+            task.style.left = '';
+            task.style.top = '';
+            task.style.cursor = '';
+            task.classList.remove('dragging', 'collision-warning', 'being-hovered', 'hovering-over-task');
+        });
     },
 
     resetTaskPositions() {
-        const tasks = document.querySelectorAll('.task-card');
-        const occupiedPositions = new Set();
+        if (!confirm('Reset all task positions?')) return;
 
         this.taskPositions.clear();
         this.saveTaskPositionsToStorage();
 
-        tasks.forEach((task, index) => {
-            this.autoPositionTask(task, index, occupiedPositions);
-        });
-
-        this.showNotification('Task positions reset with micro-precision.', 'info');
-    },
-
-    autoArrangeTasks() {
-        const tasks = Array.from(document.querySelectorAll('.task-card'));
-
-        tasks.forEach(task => {
-            task.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        });
-
-        const workspace = document.querySelector('.workspace');
-        const workspaceRect = workspace.getBoundingClientRect();
-
-        const individualTasks = tasks.filter(task => !task.classList.contains('task-group'));
-        const groupTasks = tasks.filter(task => task.classList.contains('task-group'));
-
-        let currentY = 20;
-        const occupiedPositions = new Set();
-
-        if (groupTasks.length > 0) {
-            const availableWidth = workspaceRect.width - 112 - 20; // Account for floating bar
-            const groupCols = Math.floor(availableWidth / 420);
-            groupTasks.forEach((task, index) => {
-                const row = Math.floor(index / groupCols);
-                const col = index % groupCols;
-
-                const x = col * 420 + 20 + 112; // Add space for floating bar
-                const y = currentY + row * 300;
-
-                task.style.left = x + 'px';
-                task.style.top = y + 'px';
-                occupiedPositions.add(`${x},${y}`);
-                this.saveTaskPosition(task);
-            });
-
-            currentY += Math.ceil(groupTasks.length / groupCols) * 300 + 20;
+        if (this.fluidModeEnabled && this.applyFluidFilter) {
+            this.applyFluidFilter(this.activeFilter);
         }
 
-        if (individualTasks.length > 0) {
-            const availableWidth = workspaceRect.width - 112 - 20;
-            const individualCols = Math.floor(availableWidth / 320);
-
-            individualTasks.forEach((task, index) => {
-                const row = Math.floor(index / individualCols);
-                const col = index % individualCols;
-
-                const x = col * 320 + 20 + 112; // Add space for floating bar
-                const y = currentY + row * 220;
-
-                task.style.left = x + 'px';
-                task.style.top = y + 'px';
-                occupiedPositions.add(`${x},${y}`);
-                this.saveTaskPosition(task);
-            });
+        if (this.showNotification) {
+            this.showNotification('Positions reset!', 'success');
         }
-
-        setTimeout(() => {
-            tasks.forEach(task => {
-                task.style.transition = '';
-            });
-        }, 400);
-
-        this.showNotification('Tasks arranged with precision!', 'success');
     }
 });
 
-// Enhance the original renderTasks function to support fluid mode
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         if (window.dashboard) {
             const originalRenderTasks = window.dashboard.renderTasks;
-            window.dashboard.renderTasks = function() {
-                originalRenderTasks.call(this);
 
-                if (this.fluidModeEnabled) {
-                    setTimeout(() => {
-                        this.makeTasksDraggable();
-                        this.loadTaskPositions();
-                    }, 100);
-                }
-            };
+            if (originalRenderTasks && !window.dashboard._fluidRenderHooked) {
+                window.dashboard._fluidRenderHooked = true;
+
+                window.dashboard.renderTasks = function() {
+                    originalRenderTasks.call(this);
+
+                    if (this.fluidModeEnabled) {
+                        setTimeout(() => {
+                            if (this.makeTasksDraggable) this.makeTasksDraggable();
+                            if (this.loadTaskPositions) this.loadTaskPositions();
+                        }, 100);
+                    }
+                };
+
+                console.log('✅ Fluid mode render hook installed');
+            }
         }
     }, 1100);
 });

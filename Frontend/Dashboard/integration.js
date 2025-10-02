@@ -1,6 +1,5 @@
-// ===== INTEGRATION.JS - COMPLETE FIXED VERSION =====
-// Simplified integration script that hooks everything together
-// Replace your entire integration.js file with this
+// ===== INTEGRATION.JS - FINAL FIX =====
+// Works with both normal mode AND fluid mode
 
 (function() {
     'use strict';
@@ -10,13 +9,11 @@
     let initialized = false;
 
     const initializeEnhancements = () => {
-        // Wait for dashboard and user
         if (!window.dashboard || !window.dashboard.currentUser) {
             setTimeout(initializeEnhancements, 500);
             return;
         }
 
-        // Prevent multiple initializations
         if (initialized) {
             console.log('⚠️ Already initialized, skipping');
             return;
@@ -25,76 +22,112 @@
         console.log('✅ Dashboard ready, initializing enhancements...');
 
         try {
-            // 1. Initialize resize functionality
+            // 1. Initialize resize
             if (typeof window.dashboard.initTaskResize === 'function') {
                 window.dashboard.initTaskResize();
                 console.log('✅ Resize initialized');
-            } else {
-                console.warn('⚠️ Resize function not found');
             }
 
-            // 2. Initialize task box enhancements (context menu)
+            // 2. Initialize context menu
             if (typeof window.dashboard.initTaskBoxEnhancements === 'function') {
                 window.dashboard.initTaskBoxEnhancements();
                 console.log('✅ Context menu initialized');
-            } else {
-                console.warn('⚠️ Task box enhancements not found');
             }
 
-            // 3. Initialize fluid mode (if available)
+            // 3. Initialize fluid mode
             if (typeof window.dashboard.initFluidMode === 'function') {
                 window.dashboard.initFluidMode();
                 console.log('✅ Fluid mode initialized');
             }
 
-            // 4. Hook into task rendering
-            const originalRenderFilteredTasks = window.dashboard.renderFilteredTasks;
+            // 4. Function to enhance tasks
+            const enhanceAllTasks = function() {
+                const taskCards = document.querySelectorAll('.task-card');
 
-            if (originalRenderFilteredTasks && !window.dashboard._enhancementsHooked) {
-                window.dashboard._enhancementsHooked = true;
+                if (taskCards.length === 0) {
+                    console.warn('⚠️ No tasks found to enhance');
+                    return;
+                }
 
-                window.dashboard.renderFilteredTasks = function(filteredTasks) {
-                    // Call original render
-                    originalRenderFilteredTasks.call(this, filteredTasks);
+                console.log(`🔍 Found ${taskCards.length} tasks to enhance`);
 
-                    // Add enhancements after a short delay
-                    setTimeout(() => {
-                        const taskCards = document.querySelectorAll('.task-card');
+                taskCards.forEach(card => {
+                    // Add resize (check if not already added)
+                    if (!card.querySelector('.resize-handle') && this.addResizeHandle) {
+                        this.addResizeHandle(card);
+                        this.loadTaskSize(card);
+                    }
 
-                        taskCards.forEach(card => {
-                            // Add resize handle
-                            if (this.addResizeHandle) {
-                                this.addResizeHandle(card);
-                                this.loadTaskSize(card);
-                            }
+                    // Add context menu (check if not already added)
+                    if (!card._contextMenuHandler && this.addContextMenuToTask) {
+                        this.addContextMenuToTask(card);
+                    }
 
-                            // Add context menu
-                            if (this.addContextMenuToTask) {
-                                this.addContextMenuToTask(card);
-                            }
+                    // Enhance visuals
+                    if (!card.dataset.enhanced && this.enhanceTaskCard) {
+                        this.enhanceTaskCard(card);
+                    }
+                });
 
-                            // Enhance task card visuals
-                            if (this.enhanceTaskCard) {
-                                this.enhanceTaskCard(card);
-                            }
-                        });
+                // Load pinned states
+                if (this.loadPinnedStates) {
+                    this.loadPinnedStates();
+                }
 
-                        console.log(`✨ Enhanced ${taskCards.length} tasks`);
-                    }, 100);
+                console.log(`✨ Enhanced ${taskCards.length} tasks`);
+            };
+
+            // 5. Hook renderTasks (for normal grid/list mode)
+            const originalRenderTasks = window.dashboard.renderTasks;
+            if (originalRenderTasks && !window.dashboard._renderTasksHooked) {
+                window.dashboard._renderTasksHooked = true;
+
+                window.dashboard.renderTasks = function() {
+                    originalRenderTasks.call(this);
+
+                    // Only enhance here if NOT in fluid mode
+                    // Fluid mode will enhance in loadTaskPositions
+                    if (!this.fluidModeEnabled) {
+                        setTimeout(() => enhanceAllTasks.call(this), 150);
+                    }
                 };
 
-                console.log('✅ Rendering hook installed');
+                console.log('✅ renderTasks hook installed');
             }
 
-            // 5. Mark as initialized
+            // 6. Hook renderFilteredTasks
+            const originalRenderFilteredTasks = window.dashboard.renderFilteredTasks;
+            if (originalRenderFilteredTasks && !window.dashboard._renderFilteredTasksHooked) {
+                window.dashboard._renderFilteredTasksHooked = true;
+
+                window.dashboard.renderFilteredTasks = function(filteredTasks) {
+                    originalRenderFilteredTasks.call(this, filteredTasks);
+
+                    // Only enhance here if NOT in fluid mode
+                    if (!this.fluidModeEnabled) {
+                        setTimeout(() => enhanceAllTasks.call(this), 150);
+                    }
+                };
+
+                console.log('✅ renderFilteredTasks hook installed');
+            }
+
+            // 7. Enhance any existing tasks (initial load)
+            setTimeout(() => {
+                if (window.dashboard && !window.dashboard.fluidModeEnabled) {
+                    enhanceAllTasks.call(window.dashboard);
+                }
+            }, 500);
+
+            // 8. Mark as initialized
             initialized = true;
             console.log('🎉 All enhancements initialized successfully!');
 
-            // Show success notification
+            // Show notification
             if (window.dashboard.showNotification) {
                 setTimeout(() => {
                     window.dashboard.showNotification(
-                        'Enhanced features loaded! Right-click tasks for menu, drag corner to resize.',
+                        'Enhanced features loaded! Right-click tasks for menu, hover corner to resize.',
                         'success'
                     );
                 }, 2000);
@@ -102,12 +135,6 @@
 
         } catch (error) {
             console.error('❌ Integration error:', error);
-            if (window.dashboard && window.dashboard.showNotification) {
-                window.dashboard.showNotification(
-                    'Some features may not be available.',
-                    'error'
-                );
-            }
         }
     };
 
@@ -118,7 +145,7 @@
         initializeEnhancements();
     }
 
-    // Backup attempts (in case of timing issues)
+    // Backup attempts
     setTimeout(initializeEnhancements, 1000);
     setTimeout(initializeEnhancements, 2000);
 

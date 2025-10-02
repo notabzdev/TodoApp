@@ -42,7 +42,139 @@ Object.assign(TaskFlowDashboard.prototype, {
                 handle.style.opacity = '0.7';
             }
         });
+// ===== ADD THESE FUNCTIONS TO YOUR resize.js FILE =====
+// Place after the existing addResizeHandle function
 
+// Enhanced resize with both width and height
+        Object.assign(TaskFlowDashboard.prototype, {
+            addBidirectionalResizeHandle(taskCard) {
+                // Only in fluid mode or if you want it everywhere
+                const isFluidMode = document.body.classList.contains('fluid-mode');
+
+                // Remove old handle if exists
+                const oldHandle = taskCard.querySelector('.resize-handle');
+                if (oldHandle) oldHandle.remove();
+
+                // Create new bi-directional handle
+                const handle = document.createElement('div');
+                handle.className = 'resize-handle-bidirectional';
+                handle.innerHTML = '⋰';
+                handle.title = 'Drag to resize width and height';
+
+                const dimensions = document.createElement('div');
+                dimensions.className = 'resize-dimensions';
+
+                taskCard.appendChild(handle);
+                taskCard.appendChild(dimensions);
+
+                // Constraints
+                const isGroup = taskCard.classList.contains('task-group');
+                const minHeight = isGroup ? 250 : 180;
+                const maxHeight = isGroup ? 600 : 400;
+                const minWidth = 250;
+                const maxWidth = 600;
+
+                let isResizing = false;
+
+                // Show/hide
+                taskCard.addEventListener('mouseenter', () => {
+                    if (!isResizing) handle.style.opacity = '0.7';
+                });
+
+                taskCard.addEventListener('mouseleave', () => {
+                    if (!isResizing) handle.style.opacity = '0';
+                });
+
+                // Mouse down
+                handle.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    isResizing = true;
+                    const startX = e.clientX;
+                    const startY = e.clientY;
+                    const startWidth = taskCard.offsetWidth;
+                    const startHeight = taskCard.offsetHeight;
+
+                    // Visual feedback
+                    handle.classList.add('resizing');
+                    taskCard.classList.add('resizing');
+                    document.body.style.cursor = 'nwse-resize';
+                    document.body.style.userSelect = 'none';
+                    dimensions.style.opacity = '1';
+
+                    const handleMouseMove = (moveEvent) => {
+                        if (!isResizing) return;
+
+                        const deltaX = moveEvent.clientX - startX;
+                        const deltaY = moveEvent.clientY - startY;
+
+                        let newWidth = startWidth + deltaX;
+                        let newHeight = startHeight + deltaY;
+
+                        // Apply constraints
+                        newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+                        newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+
+                        // Update size
+                        taskCard.style.width = newWidth + 'px';
+                        taskCard.style.height = newHeight + 'px';
+                        dimensions.textContent = `${Math.round(newWidth)} × ${Math.round(newHeight)}px`;
+                    };
+
+                    const handleMouseUp = () => {
+                        if (!isResizing) return;
+
+                        isResizing = false;
+                        handle.classList.remove('resizing');
+                        taskCard.classList.remove('resizing');
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+                        dimensions.style.opacity = '0';
+
+                        // Save both dimensions
+                        this.saveBidirectionalSize(taskCard, taskCard.offsetWidth, taskCard.offsetHeight);
+
+                        document.removeEventListener('mousemove', handleMouseMove);
+                        document.removeEventListener('mouseup', handleMouseUp);
+                    };
+
+                    document.addEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mouseup', handleMouseUp);
+                });
+
+                handle.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            },
+
+            saveBidirectionalSize(taskCard, width, height) {
+                const taskId = taskCard.dataset.taskId;
+                if (!taskId || !this.currentUser) return;
+
+                const sizeData = {
+                    width: width,
+                    height: height,
+                    timestamp: Date.now(),
+                    userId: this.currentUser.id
+                };
+
+                this.taskSizes.set(taskId, sizeData);
+                this.saveTaskSizesToStorage();
+            },
+
+            loadBidirectionalSize(taskCard) {
+                const taskId = taskCard.dataset.taskId;
+                if (!taskId || !this.taskSizes) return;
+
+                const savedSize = this.taskSizes.get(taskId);
+                if (savedSize) {
+                    if (savedSize.width) taskCard.style.width = savedSize.width + 'px';
+                    if (savedSize.height) taskCard.style.height = savedSize.height + 'px';
+                }
+            }
+        });
         taskCard.addEventListener('mouseleave', () => {
             if (!isResizing) {
                 handle.style.opacity = '0';

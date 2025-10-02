@@ -1,6 +1,6 @@
-// ===== TASKBOX.JS - COMPLETE FIXED VERSION =====
-// Enhanced Task Box Interactions with Context Menu
-// Replace your entire taskbox.js file with this
+// ===== TASKBOX.JS - COMPLETE FILE WITH ALL FIXES =====
+// Enhanced Task Box Interactions with Context Menu and Pin Feature
+// Replace your ENTIRE taskbox.js file with this
 
 Object.assign(TaskFlowDashboard.prototype, {
     initTaskBoxEnhancements() {
@@ -33,7 +33,8 @@ Object.assign(TaskFlowDashboard.prototype, {
         // Create new handler
         const handler = (e) => {
             // Don't interfere with resize handle
-            if (e.target.closest('.resize-handle')) {
+            if (e.target.closest('.resize-handle') ||
+                e.target.closest('.resize-handle-bidirectional')) {
                 return;
             }
 
@@ -58,8 +59,9 @@ Object.assign(TaskFlowDashboard.prototype, {
     showTaskContextMenu(taskCard, x, y) {
         const taskId = taskCard.dataset.taskId;
         const isGroup = taskCard.classList.contains('task-group');
+        const isPinned = taskCard.classList.contains('pinned');
 
-        console.log('📋 Showing context menu for task:', taskId);
+        console.log('📋 Showing context menu for task:', taskId, 'Pinned:', isPinned);
 
         // Mark menu as open
         this.contextMenuOpen = true;
@@ -90,7 +92,7 @@ Object.assign(TaskFlowDashboard.prototype, {
             transition: all 0.2s ease;
         `;
 
-        // Define menu items
+        // Define menu items with dynamic pin text
         const menuItems = [
             {
                 icon: '✏️',
@@ -110,8 +112,8 @@ Object.assign(TaskFlowDashboard.prototype, {
                 }
             },
             {
-                icon: '📌',
-                text: 'Pin Task',
+                icon: isPinned ? '📍' : '📌',
+                text: isPinned ? 'Unpin Task' : 'Pin Task',
                 action: () => {
                     this.pinTask(taskId, taskCard);
                 }
@@ -260,7 +262,105 @@ Object.assign(TaskFlowDashboard.prototype, {
         this.contextMenuOpen = false;
     },
 
-    // Placeholder functions for menu items
+    // ===== PIN FEATURE - COMPLETE IMPLEMENTATION =====
+    pinTask(taskId, taskCard) {
+        const pinned = JSON.parse(localStorage.getItem('taskflow-pinned-tasks') || '[]');
+        const index = pinned.indexOf(taskId);
+        const isPinned = index > -1;
+
+        if (isPinned) {
+            // Unpin
+            pinned.splice(index, 1);
+            taskCard.classList.remove('pinned');
+
+            // Re-enable dragging in fluid mode
+            if (document.body.classList.contains('fluid-mode')) {
+                taskCard.style.cursor = 'grab';
+                taskCard.title = '';
+
+                // Re-apply draggable
+                if (window.dashboard.makeSingleTaskDraggable) {
+                    // Clean up old draggable first
+                    if (taskCard._cleanupDraggable) {
+                        taskCard._cleanupDraggable();
+                        delete taskCard._cleanupDraggable;
+                        delete taskCard._isDraggable;
+                    }
+                    window.dashboard.makeSingleTaskDraggable(taskCard);
+                }
+            }
+
+            if (this.showNotification) {
+                this.showNotification('Task unpinned - you can now move it', 'info');
+            }
+            console.log('📍 Task unpinned:', taskId);
+        } else {
+            // Pin
+            pinned.push(taskId);
+            taskCard.classList.add('pinned');
+
+            // Disable dragging in fluid mode
+            if (document.body.classList.contains('fluid-mode')) {
+                taskCard.style.cursor = 'not-allowed';
+                taskCard.title = 'Task is pinned - right-click to unpin';
+
+                // Remove draggable
+                if (taskCard._cleanupDraggable) {
+                    taskCard._cleanupDraggable();
+                    delete taskCard._cleanupDraggable;
+                    delete taskCard._isDraggable;
+                }
+            }
+
+            if (this.showNotification) {
+                this.showNotification('Task pinned! 📌 Position locked', 'success');
+            }
+            console.log('📌 Task pinned:', taskId);
+        }
+
+        localStorage.setItem('taskflow-pinned-tasks', JSON.stringify(pinned));
+
+        // Sort tasks
+        if (!document.body.classList.contains('fluid-mode')) {
+            this.sortTasksByPinned();
+        }
+    },
+
+    sortTasksByPinned() {
+        if (!this.tasks) return;
+
+        const pinned = JSON.parse(localStorage.getItem('taskflow-pinned-tasks') || '[]');
+
+        this.tasks.sort((a, b) => {
+            const aIsPinned = pinned.includes(a.id);
+            const bIsPinned = pinned.includes(b.id);
+
+            if (aIsPinned && !bIsPinned) return -1;
+            if (!aIsPinned && bIsPinned) return 1;
+            return 0;
+        });
+
+        // Re-render to show new order
+        if (this.renderTasks) {
+            this.renderTasks();
+        }
+    },
+
+    // Load pinned state for all tasks (call this after rendering)
+    loadPinnedStates() {
+        const pinned = JSON.parse(localStorage.getItem('taskflow-pinned-tasks') || '[]');
+
+        document.querySelectorAll('.task-card').forEach(card => {
+            const taskId = card.dataset.taskId;
+            if (pinned.includes(taskId)) {
+                card.classList.add('pinned');
+            }
+        });
+
+        console.log(`📌 Loaded ${pinned.length} pinned tasks`);
+    },
+
+    // ===== PLACEHOLDER FUNCTIONS FOR CONTEXT MENU ITEMS =====
     duplicateTask(taskId) {
         const task = this.tasks ? this.tasks.find(t => t.id == taskId) : null;
 
@@ -268,37 +368,37 @@ Object.assign(TaskFlowDashboard.prototype, {
             if (this.showNotification) {
                 this.showNotification('Duplicate feature coming soon!', 'info');
             }
+            console.log('Duplicate task:', taskId);
+            // TODO: Implement actual duplication
+            // const newTask = { ...task, title: task.title + ' (Copy)' };
+            // this.createTask(newTask);
         }
-    },
-
-    pinTask(taskId, taskCard) {
-        // Toggle pinned state
-        const pinned = JSON.parse(localStorage.getItem('taskflow-pinned-tasks') || '[]');
-        const index = pinned.indexOf(taskId);
-
-        if (index > -1) {
-            pinned.splice(index, 1);
-            taskCard.classList.remove('pinned');
-            if (this.showNotification) {
-                this.showNotification('Task unpinned', 'info');
-            }
-        } else {
-            pinned.push(taskId);
-            taskCard.classList.add('pinned');
-            if (this.showNotification) {
-                this.showNotification('Task pinned!', 'success');
-            }
-        }
-
-        localStorage.setItem('taskflow-pinned-tasks', JSON.stringify(pinned));
     },
 
     showColorPicker(taskCard) {
         if (this.showNotification) {
             this.showNotification('Color picker coming soon!', 'info');
         }
+        console.log('Show color picker for:', taskCard.dataset.taskId);
+        // TODO: Implement color picker modal
     },
 
+    toggleGroupExpansion(taskCard) {
+        const taskId = taskCard.dataset.taskId;
+
+        if (this.expandedGroups.has(taskId)) {
+            this.expandedGroups.delete(taskId);
+            console.log('Collapsed group:', taskId);
+        } else {
+            this.expandedGroups.add(taskId);
+            console.log('Expanded group:', taskId);
+        }
+
+        // Trigger visual update if you have group expand/collapse UI
+        // You might need to re-render or toggle a class
+    },
+
+    // ===== VISUAL EFFECTS =====
     addTaskBoxEffects(taskCard, isGroup) {
         // Add ripple effect container
         if (!taskCard.querySelector('.ripple-container')) {
@@ -345,11 +445,27 @@ Object.assign(TaskFlowDashboard.prototype, {
         setTimeout(() => ripple.remove(), 600);
     },
 
+    addHoverEffect(taskCard) {
+        // Subtle hover effects handled by CSS
+        // This can be used for additional JS-based effects if needed
+    },
+
+    removeHoverEffect(taskCard) {
+        // Remove any temporary hover states
+    },
+
     animateNewTask(taskCard) {
         taskCard.classList.add('new-task');
         setTimeout(() => {
             taskCard.classList.remove('new-task');
         }, 2000);
+    },
+
+    quickEditTask(taskCard) {
+        const task = this.tasks.find(t => t.id == taskCard.dataset.taskId);
+        if (task && this.showTaskModal) {
+            this.showTaskModal(false, task);
+        }
     },
 
     setupTaskBoxInteractions() {
