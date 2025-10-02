@@ -924,3 +924,55 @@ if (!window.dashboard) {
         window.dashboard = new TaskFlowDashboard();
     });
 }
+// ===== ADD THIS TO YOUR DASHBOARD INITIALIZATION =====
+// Add to dashboard.js where you initialize the dashboard (usually in DOMContentLoaded)
+
+// After creating dashboard instance (e.g., window.dashboard = new TaskFlowDashboard())
+
+// Initialize expanded groups set if it doesn't exist
+// ===== FIXED INITIALIZATION - DASHBOARD COLOR PERSISTENCE =====
+
+// Ensure expandedGroups set exists
+if (!window.dashboard.expandedGroups) {
+    window.dashboard.expandedGroups = new Set();
+}
+
+// Run restores after dashboard is initialized
+document.addEventListener('DOMContentLoaded', () => {
+    const initPersistence = () => {
+        if (window.dashboard) {
+            if (window.dashboard.restoreTaskColors) {
+                window.dashboard.restoreTaskColors();
+            }
+            if (window.dashboard.restoreExpandedGroups) {
+                window.dashboard.restoreExpandedGroups();
+            }
+            console.log('✅ Color & group persistence initialized');
+        } else {
+            setTimeout(initPersistence, 300);
+        }
+    };
+    setTimeout(initPersistence, 500);
+});
+
+// Wrap renderTasks to restore after each render
+const originalRenderTasks = window.dashboard?.renderTasks;
+if (originalRenderTasks) {
+    window.dashboard.renderTasks = function() {
+        originalRenderTasks.call(this);
+
+        // Always restore colors and expansions after rendering
+        setTimeout(() => {
+            if (this.restoreTaskColors) {
+                this.restoreTaskColors();
+            }
+            if (this.restoreExpandedGroups) {
+                this.restoreExpandedGroups();
+            }
+        }, 50);
+    };
+}
+
+// ===== END OF FIXED INITIALIZATION =====
+
+// ===== END OF INITIALIZATION CODE =====

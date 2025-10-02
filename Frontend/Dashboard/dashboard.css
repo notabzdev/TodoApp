@@ -2277,3 +2277,148 @@ body.fluid-mode .task-card {
     background: #ff0080;
     box-shadow: 0 0 10px rgba(255, 0, 128, 0.6);
 }
+/* ===== CONTEXT MENU STYLES - Add to dashboard.css ===== */
+
+/* Context Menu Base */
+#task-context-menu {
+    animation: menuSlideIn 0.2s ease-out;
+}
+
+@keyframes menuSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    user-select: none;
+}
+
+.context-menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(3px);
+}
+
+.context-menu-item.danger {
+    color: #ef4444;
+}
+
+.context-menu-item.danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+}
+
+.context-menu-icon {
+    font-size: 1.1rem;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Color Picker Modal */
+#task-color-picker h3 {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+#color-picker-cancel:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
+}
+
+/* Subtasks Container Animation */
+.subtasks-container {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.subtasks-container.expanded {
+    max-height: 1000px;
+    opacity: 1;
+    padding: 1rem;
+}
+
+/* Group Expand Button */
+.group-expand-btn {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
+}
+
+.group-expand-btn:hover {
+    transform: scale(1.1);
+}
+
+.group-expand-btn.expanded {
+    transform: rotate(180deg);
+}
+
+.group-expand-btn.expanded:hover {
+    transform: rotate(180deg) scale(1.1);
+}
+
+/* Task Color Variations */
+.task-card[data-color="red"] {
+    border-color: #ef4444 !important;
+}
+
+.task-card[data-color="blue"] {
+    border-color: #3b82f6 !important;
+}
+
+.task-card[data-color="green"] {
+    border-color: #22c55e !important;
+}
+
+.task-card[data-color="purple"] {
+    border-color: #8b5cf6 !important;
+}
+
+.task-card[data-color="yellow"] {
+    border-color: #fbbf24 !important;
+}
+
+.task-card[data-color="orange"] {
+    border-color: #f97316 !important;
+}
+
+.task-card[data-color="pink"] {
+    border-color: #ec4899 !important;
+}
+
+/* Duplicate Task Animation */
+@keyframes duplicateAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.task-card.newly-duplicated {
+    animation: duplicateAppear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ===== END OF CONTEXT MENU STYLES ===== */
