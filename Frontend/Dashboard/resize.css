@@ -1,0 +1,179 @@
+/* Task Resize Functionality - FIXED VERSION */
+.task-card {
+    position: relative;
+    resize: none; /* Disable default browser resize */
+    min-height: 180px;
+    max-height: 600px;
+    transition: height 0.3s ease;
+    cursor: default !important; /* Fixed cursor conflicts */
+}
+
+/* Resize handle - FIXED positioning and interactions */
+.resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    background: var(--accent-primary);
+    cursor: se-resize !important; /* Fixed cursor type */
+    border-radius: 4px 0 8px 0;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000 !important; /* Fixed z-index conflicts */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 8px;
+    user-select: none;
+    line-height: 1;
+}
+
+.resize-handle::before {
+    content: "⋱⋱";
+    font-size: 8px;
+    line-height: 1;
+    user-select: none;
+    pointer-events: none;
+}
+
+/* Show handle on task hover - FIXED */
+.task-card:hover .resize-handle {
+    opacity: 0.7 !important;
+}
+
+.task-card .resize-handle:hover {
+    opacity: 1 !important;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(219, 39, 119, 0.4);
+    background: var(--accent-secondary) !important;
+}
+
+/* Resize indicator - FIXED */
+.task-card.resizing {
+    transition: none !important;
+    user-select: none !important;
+    box-shadow: 0 0 20px rgba(219, 39, 119, 0.5) !important;
+    border-color: var(--accent-primary) !important;
+}
+
+.task-card.resizing .resize-handle {
+    opacity: 1 !important;
+    background: var(--accent-secondary) !important;
+    transform: scale(1.2) !important;
+    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.6) !important;
+}
+
+.resize-handle.resizing {
+    opacity: 1 !important;
+    transform: scale(1.2) !important;
+    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.6) !important;
+}
+
+/* Size constraints for different task types */
+.task-card.task-individual {
+    min-height: 180px;
+    max-height: 400px;
+}
+
+.task-card.task-group {
+    min-height: 250px;
+    max-height: 600px;
+}
+
+/* Content overflow handling - FIXED */
+.task-card .task-content {
+    height: calc(100% - 20px); /* Account for resize handle */
+    overflow-y: auto;
+    padding-bottom: 20px; /* Space for resize handle */
+}
+
+/* Hide scrollbar but keep functionality */
+.task-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.task-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.task-content::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 2px;
+}
+
+.task-content::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-primary);
+}
+
+/* Resize dimensions display - FIXED */
+.resize-dimensions {
+    position: absolute;
+    top: -35px;
+    right: 0;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 1001;
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.task-card.resizing .resize-dimensions {
+    opacity: 1 !important;
+}
+
+/* Theme-specific resize handle colors */
+.theme-corporate .resize-handle {
+    background: #3b82f6;
+}
+
+.theme-nature .resize-handle {
+    background: #84cc16;
+}
+
+.theme-dark .resize-handle {
+    background: #8b5cf6;
+}
+
+.theme-sky .resize-handle {
+    background: #0ea5e9;
+}
+
+.theme-neon .resize-handle {
+    background: #ff0080;
+    box-shadow: 0 0 10px rgba(255, 0, 128, 0.6);
+}
+
+/* Prevent conflicts with other interactions */
+.resize-handle {
+    pointer-events: auto !important;
+}
+
+.task-card:not(.resizing) .resize-handle {
+    pointer-events: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .resize-handle {
+        width: 24px;
+        height: 24px;
+        opacity: 0.5; /* More visible on mobile */
+    }
+
+    .task-card.task-individual {
+        max-height: 350px;
+    }
+
+    .task-card.task-group {
+        max-height: 500px;
+    }
+}

@@ -6,6 +6,9 @@
   <title>TaskFlow Dashboard</title>
   <link rel="stylesheet" href="/Dashboard/dashboard.css">
   <link rel="stylesheet" href="/Dashboard/dashboardtwo.css">
+  <link rel="stylesheet" href="/Dashboard/dashboardthree.css">
+  <link rel="stylesheet" href="/Dashboard/dashboardfour.css">
+  <link rel="stylesheet" href="/Dashboard/themes.css">
 </head>
 <body class="theme-galactic" data-theme="galactic">
 
@@ -43,11 +46,35 @@
   </div>
 </header>
 
+<!-- Floating Action Bar (only visible in fluid mode) -->
+<div class="floating-action-bar" id="floatingActionBar">
+  <button class="floating-action-item" id="createTaskBtn" data-tooltip="New Task" type="button">
+    +
+  </button>
+  <button class="floating-action-item" id="filterAllBtn" data-tooltip="All Tasks" data-filter="all" type="button">
+    📋
+    <span class="badge" id="allCount">0</span>
+  </button>
+  <button class="floating-action-item" id="filterCompletedBtn" data-tooltip="Completed" data-filter="completed" type="button">
+    ✅
+    <span class="badge" id="completedCount">0</span>
+  </button>
+  <button class="floating-action-item" id="filterInProgressBtn" data-tooltip="In Progress" data-filter="in-progress" type="button">
+    ⏳
+    <span class="badge" id="inProgressCount">0</span>
+  </button>
+  <button class="floating-action-item" id="filterHighPriorityBtn" data-tooltip="High Priority" data-filter="high-priority" type="button">
+    🔥
+    <span class="badge" id="highPriorityCount">0</span>
+  </button>
+</div>
+
 <main class="dashboard-main">
+  <!-- Sidebar (hidden in fluid mode) -->
   <div class="sidebar">
     <div class="sidebar-section">
       <h3>Quick Actions</h3>
-      <button id="createTaskBtn" class="action-btn">+ New Task</button>
+      <button id="createTaskBtnSidebar" class="action-btn">+ New Task</button>
       <button id="createGroupBtn" class="action-btn">+ New Group</button>
     </div>
 
@@ -57,25 +84,25 @@
         <div class="filter-option filter-all" data-filter="all">
           <span class="filter-icon">📋</span>
           <span class="filter-text">All Tasks</span>
-          <span class="filter-badge" id="allCount">0</span>
+          <span class="filter-badge" id="allCountSidebar">0</span>
           <input type="checkbox" checked>
         </div>
         <div class="filter-option filter-completed" data-filter="completed">
           <span class="filter-icon">✅</span>
           <span class="filter-text">Completed</span>
-          <span class="filter-badge" id="completedCount">0</span>
+          <span class="filter-badge" id="completedCountSidebar">0</span>
           <input type="checkbox">
         </div>
         <div class="filter-option filter-in-progress" data-filter="in-progress">
           <span class="filter-icon">⏳</span>
           <span class="filter-text">In Progress</span>
-          <span class="filter-badge" id="inProgressCount">0</span>
+          <span class="filter-badge" id="inProgressCountSidebar">0</span>
           <input type="checkbox">
         </div>
         <div class="filter-option filter-high-priority" data-filter="high-priority">
           <span class="filter-icon">🔥</span>
           <span class="filter-text">High Priority</span>
-          <span class="filter-badge" id="highPriorityCount">0</span>
+          <span class="filter-badge" id="highPriorityCountSidebar">0</span>
           <input type="checkbox">
         </div>
       </div>
@@ -96,6 +123,11 @@
       <div class="welcome-message">
         <h3>Welcome to your TaskFlow Dashboard!</h3>
         <p>Create your first task or task group to get started.</p>
+        <div style="margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+          <p style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">
+            💡 <strong>Tip:</strong> Enable Fluid Mode in Settings for a dynamic, draggable workspace experience!
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -155,9 +187,105 @@
   </div>
 </div>
 
-<!-- UPDATED: Script paths for correct directory structure -->
+<!-- CRITICAL: Add this console test to verify buttons work -->
+<script>
+  // Emergency button fix - runs immediately when page loads
+  window.addEventListener('DOMContentLoaded', () => {
+    console.log('Emergency button setup starting...');
+
+    let attempts = 0;
+    const maxAttempts = 20;
+
+    const setupEmergencyButtons = () => {
+      attempts++;
+      console.log(`Setup attempt ${attempts}`);
+
+      // Create task button
+      const createBtn = document.getElementById('createTaskBtn');
+      if (createBtn && !createBtn.dataset.emergency) {
+        createBtn.onclick = (e) => {
+          e.preventDefault();
+          console.log('EMERGENCY: Create button clicked');
+          if (window.dashboard && window.dashboard.showTaskModal) {
+            window.dashboard.showTaskModal(false);
+          } else {
+            console.log('Dashboard not ready yet');
+          }
+        };
+        createBtn.dataset.emergency = 'true';
+        console.log('Emergency create button setup');
+      }
+
+      // Filter buttons
+      const filters = [
+        ['filterAllBtn', 'all'],
+        ['filterCompletedBtn', 'completed'],
+        ['filterInProgressBtn', 'in-progress'],
+        ['filterHighPriorityBtn', 'high-priority']
+      ];
+
+      filters.forEach(([btnId, filter]) => {
+        const btn = document.getElementById(btnId);
+        if (btn && !btn.dataset.emergency) {
+          btn.onclick = (e) => {
+            e.preventDefault();
+            console.log(`EMERGENCY: Filter ${filter} clicked`);
+
+            // Remove active from all
+            document.querySelectorAll('.floating-action-item[data-filter]').forEach(b => {
+              b.classList.remove('active');
+            });
+
+            // Add active to this one
+            btn.classList.add('active');
+
+            if (window.dashboard && window.dashboard.applyFluidFilter) {
+              window.dashboard.applyFluidFilter(filter);
+            } else {
+              console.log('Dashboard not ready for filtering yet');
+            }
+          };
+          btn.dataset.emergency = 'true';
+          console.log(`Emergency ${filter} filter setup`);
+        }
+      });
+
+      // Check if we got all buttons
+      const allButtons = [
+        'createTaskBtn', 'filterAllBtn', 'filterCompletedBtn',
+        'filterInProgressBtn', 'filterHighPriorityBtn'
+      ];
+
+      const setupCount = allButtons.filter(id => {
+        const el = document.getElementById(id);
+        return el && el.dataset.emergency;
+      }).length;
+
+      console.log(`Emergency setup: ${setupCount}/${allButtons.length} buttons ready`);
+
+      if (setupCount < allButtons.length && attempts < maxAttempts) {
+        setTimeout(setupEmergencyButtons, 500);
+      } else {
+        console.log('Emergency button setup complete');
+      }
+    };
+
+    setupEmergencyButtons();
+  });
+</script>
+
+<!-- Script files - LOAD IN EXACT ORDER -->
 <script src="/Dashboard/dashboard.js"></script>
 <script src="/Dashboard/dashboardtwo.js"></script>
 <script src="/Dashboard/dashboardthree.js"></script>
+<script src="/Dashboard/dashboardfour.js"></script>
+<script src="/Dashboard/dashboardfive.js"></script>
+<script src="/Dashboard/integration.js"></script>
+
+<!-- NEW: Permanent Enhancements Script -->
+<script src="/Dashboard/enhancements.js"></script>
+
+
+
 </body>
 </html>

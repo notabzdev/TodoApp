@@ -1800,3 +1800,70 @@ html::-webkit-scrollbar {
         gap: 0.5rem;
     }
 }
+/* Add this to your dashboard.css file */
+
+/* Performance warning for animated themes */
+.theme-card {
+    position: relative;
+}
+
+.theme-card[data-theme="sky"] .performance-warning,
+.theme-card[data-theme="neon"] .performance-warning {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 20px;
+    height: 20px;
+    background: #f59e0b;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: white;
+    z-index: 10;
+    cursor: help;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+    transition: all 0.3s ease;
+}
+
+.theme-card[data-theme="sky"] .performance-warning:hover,
+.theme-card[data-theme="neon"] .performance-warning:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.6);
+}
+
+/* Tooltip */
+.performance-tooltip {
+    position: absolute;
+    top: -45px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    z-index: 20;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.performance-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+.performance-warning:hover .performance-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-2px);
+}
