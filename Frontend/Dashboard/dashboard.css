@@ -1867,3 +1867,184 @@ html::-webkit-scrollbar {
     opacity: 1;
     transform: translateX(-50%) translateY(-2px);
 }
+/* ===== ADD THESE STYLES TO YOUR dashboard.css FILE ===== */
+/* Paste at the end of dashboard.css */
+
+/* ========== RESIZE HANDLE STYLES ========== */
+
+/* Task card positioning for resize */
+.task-card {
+    position: relative;
+    min-height: 180px;
+    transition: height 0.3s ease;
+}
+
+.task-card.task-group {
+    min-height: 250px;
+}
+
+/* Resize handle */
+.resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 24px;
+    height: 24px;
+    background: var(--accent-primary);
+    cursor: se-resize !important;
+    border-radius: 4px 0 12px 0;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 10px;
+    user-select: none;
+    pointer-events: auto !important;
+    line-height: 1;
+}
+
+/* Show handle on hover */
+.task-card:hover .resize-handle {
+    opacity: 0.7;
+}
+
+.resize-handle:hover {
+    opacity: 1 !important;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.4);
+}
+
+/* Active resizing state */
+.resize-handle.resizing {
+    opacity: 1 !important;
+    transform: scale(1.2);
+    background: var(--accent-secondary);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.6);
+}
+
+.task-card.resizing {
+    transition: none !important;
+    user-select: none;
+    box-shadow: 0 0 20px var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+/* Dimensions tooltip */
+.resize-dimensions {
+    position: absolute;
+    top: -35px;
+    right: 0;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    z-index: 101;
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.task-card.resizing .resize-dimensions {
+    opacity: 1 !important;
+}
+
+/* Theme-specific resize handle colors */
+.theme-corporate .resize-handle {
+    background: #3b82f6;
+}
+
+.theme-nature .resize-handle {
+    background: #84cc16;
+}
+
+.theme-dark .resize-handle {
+    background: #8b5cf6;
+}
+
+.theme-sky .resize-handle {
+    background: #0ea5e9;
+}
+
+.theme-neon .resize-handle {
+    background: #ff0080;
+    box-shadow: 0 0 10px rgba(255, 0, 128, 0.6);
+}
+
+/* ========== CONTEXT MENU & EFFECTS ========== */
+
+/* Ripple animation for click effects */
+@keyframes ripple-animation {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(10);
+        opacity: 0;
+    }
+}
+
+/* New task animation */
+.task-card.new-task {
+    animation: new-task-pulse 1s ease-out;
+}
+
+@keyframes new-task-pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: var(--shadow);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 12px 48px var(--accent-primary);
+    }
+}
+
+/* Pinned task indicator */
+.task-card.pinned::before {
+    content: '📌';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--accent-primary);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(219, 39, 119, 0.4);
+}
+
+/* Focus ring for accessibility */
+.task-card.focus-ring {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .resize-handle {
+        width: 28px;
+        height: 28px;
+        opacity: 0.5; /* More visible on touch devices */
+        font-size: 12px;
+    }
+
+    .task-card.task-individual {
+        max-height: 350px;
+    }
+
+    .task-card.task-group {
+        max-height: 500px;
+    }
+}
