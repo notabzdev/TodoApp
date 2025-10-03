@@ -1800,3 +1800,625 @@ html::-webkit-scrollbar {
         gap: 0.5rem;
     }
 }
+/* Add this to your dashboard.css file */
+
+/* Performance warning for animated themes */
+.theme-card {
+    position: relative;
+}
+
+.theme-card[data-theme="sky"] .performance-warning,
+.theme-card[data-theme="neon"] .performance-warning {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 20px;
+    height: 20px;
+    background: #f59e0b;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: white;
+    z-index: 10;
+    cursor: help;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+    transition: all 0.3s ease;
+}
+
+.theme-card[data-theme="sky"] .performance-warning:hover,
+.theme-card[data-theme="neon"] .performance-warning:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.6);
+}
+
+/* Tooltip */
+.performance-tooltip {
+    position: absolute;
+    top: -45px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    z-index: 20;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.performance-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+.performance-warning:hover .performance-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-2px);
+}
+/* ===== ADD THESE STYLES TO YOUR dashboard.css FILE ===== */
+/* Paste at the end of dashboard.css */
+
+/* ========== RESIZE HANDLE STYLES ========== */
+
+/* Task card positioning for resize */
+.task-card {
+    position: relative;
+    min-height: 180px;
+    transition: height 0.3s ease;
+}
+
+.task-card.task-group {
+    min-height: 250px;
+}
+
+/* Resize handle */
+.resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 24px;
+    height: 24px;
+    background: var(--accent-primary);
+    cursor: se-resize !important;
+    border-radius: 4px 0 12px 0;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 10px;
+    user-select: none;
+    pointer-events: auto !important;
+    line-height: 1;
+}
+
+/* Show handle on hover */
+.task-card:hover .resize-handle {
+    opacity: 0.7;
+}
+
+.resize-handle:hover {
+    opacity: 1 !important;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.4);
+}
+
+/* Active resizing state */
+.resize-handle.resizing {
+    opacity: 1 !important;
+    transform: scale(1.2);
+    background: var(--accent-secondary);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.6);
+}
+
+.task-card.resizing {
+    transition: none !important;
+    user-select: none;
+    box-shadow: 0 0 20px var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+/* Dimensions tooltip */
+.resize-dimensions {
+    position: absolute;
+    top: -35px;
+    right: 0;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    z-index: 101;
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.task-card.resizing .resize-dimensions {
+    opacity: 1 !important;
+}
+
+/* Theme-specific resize handle colors */
+.theme-corporate .resize-handle {
+    background: #3b82f6;
+}
+
+.theme-nature .resize-handle {
+    background: #84cc16;
+}
+
+.theme-dark .resize-handle {
+    background: #8b5cf6;
+}
+
+.theme-sky .resize-handle {
+    background: #0ea5e9;
+}
+
+.theme-neon .resize-handle {
+    background: #ff0080;
+    box-shadow: 0 0 10px rgba(255, 0, 128, 0.6);
+}
+
+/* ========== CONTEXT MENU & EFFECTS ========== */
+
+/* Ripple animation for click effects */
+@keyframes ripple-animation {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(10);
+        opacity: 0;
+    }
+}
+
+/* New task animation */
+.task-card.new-task {
+    animation: new-task-pulse 1s ease-out;
+}
+
+@keyframes new-task-pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: var(--shadow);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 12px 48px var(--accent-primary);
+    }
+}
+
+/* Pinned task indicator */
+.task-card.pinned::before {
+    content: '📌';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--accent-primary);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(219, 39, 119, 0.4);
+}
+
+/* Focus ring for accessibility */
+.task-card.focus-ring {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .resize-handle {
+        width: 28px;
+        height: 28px;
+        opacity: 0.5; /* More visible on touch devices */
+        font-size: 12px;
+    }
+
+    .task-card.task-individual {
+        max-height: 350px;
+    }
+
+    .task-card.task-group {
+        max-height: 500px;
+    }
+}
+/* ===== ADD TO dashboard.css - BIDIRECTIONAL RESIZE ===== */
+
+/* Bidirectional resize handle (both width and height) */
+.resize-handle-bidirectional {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 24px;
+    height: 24px;
+    background: var(--accent-primary);
+    cursor: nwse-resize !important;
+    border-radius: 4px 0 12px 0;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    user-select: none;
+    pointer-events: auto !important;
+}
+
+.task-card:hover .resize-handle-bidirectional {
+    opacity: 0.7;
+}
+
+.resize-handle-bidirectional:hover {
+    opacity: 1 !important;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.4);
+}
+
+.resize-handle-bidirectional.resizing {
+    opacity: 1 !important;
+    transform: scale(1.2);
+    background: var(--accent-secondary);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.6);
+}
+
+/* Allow width changes in fluid mode */
+body.fluid-mode .task-card {
+    min-width: 250px;
+    max-width: 600px;
+}
+/* ===== ADD/REPLACE IN dashboard.css - COMPLETE PIN FEATURE STYLES ===== */
+
+/* Pinned task indicator - Top right badge */
+.task-card.pinned::before {
+    content: '📌';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: var(--accent-primary);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.5);
+    animation: pin-bounce 0.5s ease-out;
+    border: 3px solid var(--primary-bg);
+}
+
+/* Pin bounce animation */
+@keyframes pin-bounce {
+    0% {
+        transform: scale(0) rotate(-45deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2) rotate(10deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+/* Pinned task gets elevated styling */
+.task-card.pinned {
+    border: 2px solid var(--accent-primary);
+    box-shadow: 0 8px 32px rgba(219, 39, 119, 0.3);
+    position: relative;
+}
+
+/* Pinned task in grid view - move to top visually */
+.tasks-container.grid-view .task-card.pinned {
+    order: -1; /* Moves to beginning of flex/grid */
+}
+
+/* Pinned task hover effect */
+.task-card.pinned:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 40px rgba(219, 39, 119, 0.4);
+}
+
+/* Theme-specific pin colors */
+.theme-corporate .task-card.pinned::before {
+    background: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+}
+
+.theme-nature .task-card.pinned::before {
+    background: #84cc16;
+    box-shadow: 0 4px 12px rgba(132, 204, 22, 0.5);
+}
+
+.theme-dark .task-card.pinned::before {
+    background: #8b5cf6;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
+}
+
+.theme-sky .task-card.pinned::before {
+    background: #0ea5e9;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.5);
+}
+
+.theme-neon .task-card.pinned::before {
+    background: #ff0080;
+    box-shadow: 0 4px 12px rgba(255, 0, 128, 0.8);
+}
+
+/* Pinned section divider (optional - adds visual separation) */
+.tasks-container.grid-view::after {
+    content: '';
+    grid-column: 1 / -1;
+    height: 2px;
+    background: linear-gradient(to right, transparent, var(--border-color), transparent);
+    margin: 1rem 0;
+    order: 0;
+}
+/* CRITICAL: Force all tasks to be absolutely positioned in fluid mode */
+body.fluid-mode .task-card {
+    position: absolute !important;
+    /* Tasks should NOT be in document flow */
+}
+
+/* Ensure tasks don't affect each other's layout */
+body.fluid-mode .tasks-container {
+    position: relative;
+    /* Container needs to be positioned for absolute children */
+}
+
+/* Remove any flexbox/grid that might interfere */
+body.fluid-mode .tasks-container.grid-view,
+body.fluid-mode .tasks-container.list-view {
+    display: block !important;
+    /* No grid or flex in fluid mode */
+}
+
+/* Prevent task content from expanding container */
+body.fluid-mode .task-card * {
+    max-width: 100%;
+    /* Prevent overflow issues */
+}
+/* ===== ADD TO dashboard.css - BI-DIRECTIONAL RESIZE FOR FLUID MODE ===== */
+
+/* Fluid mode resize handle (diagonal - resizes both width and height) */
+.resize-handle-fluid {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 24px;
+    height: 24px;
+    background: var(--accent-primary);
+    cursor: nwse-resize !important;
+    border-radius: 4px 0 12px 0;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    user-select: none;
+    pointer-events: auto !important;
+}
+
+.task-card:hover .resize-handle-fluid {
+    opacity: 0.7;
+}
+
+.resize-handle-fluid:hover {
+    opacity: 1 !important;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.4);
+}
+
+.resize-handle-fluid.resizing {
+    opacity: 1 !important;
+    transform: scale(1.2);
+    background: var(--accent-secondary);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.6);
+}
+
+/* Allow width changes in fluid mode */
+body.fluid-mode .task-card {
+    min-width: 250px;
+    max-width: 600px;
+    width: 300px; /* Default width */
+}
+
+/* Theme-specific fluid resize colors */
+.theme-corporate .resize-handle-fluid {
+    background: #3b82f6;
+}
+
+.theme-nature .resize-handle-fluid {
+    background: #84cc16;
+}
+
+.theme-dark .resize-handle-fluid {
+    background: #8b5cf6;
+}
+
+.theme-sky .resize-handle-fluid {
+    background: #0ea5e9;
+}
+
+.theme-neon .resize-handle-fluid {
+    background: #ff0080;
+    box-shadow: 0 0 10px rgba(255, 0, 128, 0.6);
+}
+/* ===== CONTEXT MENU STYLES - Add to dashboard.css ===== */
+
+/* Context Menu Base */
+#task-context-menu {
+    animation: menuSlideIn 0.2s ease-out;
+}
+
+@keyframes menuSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    user-select: none;
+}
+
+.context-menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(3px);
+}
+
+.context-menu-item.danger {
+    color: #ef4444;
+}
+
+.context-menu-item.danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+}
+
+.context-menu-icon {
+    font-size: 1.1rem;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Color Picker Modal */
+#task-color-picker h3 {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+#color-picker-cancel:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
+}
+
+/* Subtasks Container Animation */
+.subtasks-container {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.subtasks-container.expanded {
+    max-height: 1000px;
+    opacity: 1;
+    padding: 1rem;
+}
+
+/* Group Expand Button */
+.group-expand-btn {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
+}
+
+.group-expand-btn:hover {
+    transform: scale(1.1);
+}
+
+.group-expand-btn.expanded {
+    transform: rotate(180deg);
+}
+
+.group-expand-btn.expanded:hover {
+    transform: rotate(180deg) scale(1.1);
+}
+
+/* Task Color Variations */
+.task-card[data-color="red"] {
+    border-color: #ef4444 !important;
+}
+
+.task-card[data-color="blue"] {
+    border-color: #3b82f6 !important;
+}
+
+.task-card[data-color="green"] {
+    border-color: #22c55e !important;
+}
+
+.task-card[data-color="purple"] {
+    border-color: #8b5cf6 !important;
+}
+
+.task-card[data-color="yellow"] {
+    border-color: #fbbf24 !important;
+}
+
+.task-card[data-color="orange"] {
+    border-color: #f97316 !important;
+}
+
+.task-card[data-color="pink"] {
+    border-color: #ec4899 !important;
+}
+
+/* Duplicate Task Animation */
+@keyframes duplicateAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.task-card.newly-duplicated {
+    animation: duplicateAppear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ===== END OF CONTEXT MENU STYLES ===== */
