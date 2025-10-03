@@ -1,285 +1,301 @@
-
-
 Object.assign(TaskFlowDashboard.prototype, {
     initTaskResize() {
-        console.log('✅ Initializing task resize functionality');
+        console.log('✅ Initializing task resize');
         this.taskSizes = new Map();
+        this.defaultTaskSizes = new Map(); // Store original sizes
         this.loadTaskSizesFromStorage();
     },
 
     addResizeHandle(taskCard) {
-        // Prevent duplicate handles
-        if (taskCard.querySelector('.resize-handle')) {
-            return;
+        if (taskCard.querySelector('.resize-handle')) return;
+
+        // CRITICAL: Capture and store the natural rendered size
+        const computedStyle = window.getComputedStyle(taskCard);
+        const defaultHeight = parseInt(computedStyle.height);
+        const defaultWidth = parseInt(computedStyle.width);
+
+        // Store default size for this task
+        const taskId = taskCard.dataset.taskId;
+        if (!this.defaultTaskSizes.has(taskId)) {
+            this.defaultTaskSizes.set(taskId, { width: defaultWidth, height: defaultHeight });
         }
 
-        // Create handle element
         const handle = document.createElement('div');
         handle.className = 'resize-handle';
-        handle.innerHTML = '⋱⋱';
-        handle.title = 'Drag to resize';
+        handle.innerHTML = '⋱';
+        handle.title = 'Resize height';
+        handle.style.cssText = `
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 20px;
+            height: 20px;
+            cursor: ns-resize;
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        `;
 
-        // Create dimensions tooltip
-        const dimensions = document.createElement('div');
-        dimensions.className = 'resize-dimensions';
+        const tooltip = document.createElement('div');
+        tooltip.className = 'resize-tooltip';
+        tooltip.style.cssText = `
+            position: absolute;
+            bottom: 25px;
+            right: 0;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+        `;
 
-        // Append to task card
-        taskCard.style.position = 'relative';
         taskCard.appendChild(handle);
-        taskCard.appendChild(dimensions);
+        taskCard.appendChild(tooltip);
 
-        // Get constraints based on task type
-        const isGroup = taskCard.classList.contains('task-group');
-        const minHeight = isGroup ? 250 : 180;
-        const maxHeight = isGroup ? 600 : 400;
-
-        // Resize state
         let isResizing = false;
+        let startY, startHeight;
 
-        // Show/hide handle on hover
+        // STRICT minimum based on actual default
+        const ABSOLUTE_MIN_HEIGHT = defaultHeight;
+        const MAX_HEIGHT = 800;
+
         taskCard.addEventListener('mouseenter', () => {
-            if (!isResizing) {
-                handle.style.opacity = '0.7';
-            }
+            if (!isResizing) handle.style.opacity = '0.7';
         });
-// ===== ADD THESE FUNCTIONS TO YOUR resize.js FILE =====
-// Place after the existing addResizeHandle function
 
-// Enhanced resize with both width and height
-        Object.assign(TaskFlowDashboard.prototype, {
-            addBidirectionalResizeHandle(taskCard) {
-                // Only in fluid mode or if you want it everywhere
-                const isFluidMode = document.body.classList.contains('fluid-mode');
-
-                // Remove old handle if exists
-                const oldHandle = taskCard.querySelector('.resize-handle');
-                if (oldHandle) oldHandle.remove();
-
-                // Create new bi-directional handle
-                const handle = document.createElement('div');
-                handle.className = 'resize-handle-bidirectional';
-                handle.innerHTML = '⋰';
-                handle.title = 'Drag to resize width and height';
-
-                const dimensions = document.createElement('div');
-                dimensions.className = 'resize-dimensions';
-
-                taskCard.appendChild(handle);
-                taskCard.appendChild(dimensions);
-
-                // Constraints
-                const isGroup = taskCard.classList.contains('task-group');
-                const minHeight = isGroup ? 250 : 180;
-                const maxHeight = isGroup ? 600 : 400;
-                const minWidth = 250;
-                const maxWidth = 600;
-
-                let isResizing = false;
-
-                // Show/hide
-                taskCard.addEventListener('mouseenter', () => {
-                    if (!isResizing) handle.style.opacity = '0.7';
-                });
-
-                taskCard.addEventListener('mouseleave', () => {
-                    if (!isResizing) handle.style.opacity = '0';
-                });
-
-                // Mouse down
-                handle.addEventListener('mousedown', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    isResizing = true;
-                    const startX = e.clientX;
-                    const startY = e.clientY;
-                    const startWidth = taskCard.offsetWidth;
-                    const startHeight = taskCard.offsetHeight;
-
-                    // Visual feedback
-                    handle.classList.add('resizing');
-                    taskCard.classList.add('resizing');
-                    document.body.style.cursor = 'nwse-resize';
-                    document.body.style.userSelect = 'none';
-                    dimensions.style.opacity = '1';
-
-                    const handleMouseMove = (moveEvent) => {
-                        if (!isResizing) return;
-
-                        const deltaX = moveEvent.clientX - startX;
-                        const deltaY = moveEvent.clientY - startY;
-
-                        let newWidth = startWidth + deltaX;
-                        let newHeight = startHeight + deltaY;
-
-                        // Apply constraints
-                        newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
-                        newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
-
-                        // Update size
-                        taskCard.style.width = newWidth + 'px';
-                        taskCard.style.height = newHeight + 'px';
-                        dimensions.textContent = `${Math.round(newWidth)} × ${Math.round(newHeight)}px`;
-                    };
-
-                    const handleMouseUp = () => {
-                        if (!isResizing) return;
-
-                        isResizing = false;
-                        handle.classList.remove('resizing');
-                        taskCard.classList.remove('resizing');
-                        document.body.style.cursor = '';
-                        document.body.style.userSelect = '';
-                        dimensions.style.opacity = '0';
-
-                        // Save both dimensions
-                        this.saveBidirectionalSize(taskCard, taskCard.offsetWidth, taskCard.offsetHeight);
-
-                        document.removeEventListener('mousemove', handleMouseMove);
-                        document.removeEventListener('mouseup', handleMouseUp);
-                    };
-
-                    document.addEventListener('mousemove', handleMouseMove);
-                    document.addEventListener('mouseup', handleMouseUp);
-                });
-
-                handle.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                });
-            },
-
-            saveBidirectionalSize(taskCard, width, height) {
-                const taskId = taskCard.dataset.taskId;
-                if (!taskId || !this.currentUser) return;
-
-                const sizeData = {
-                    width: width,
-                    height: height,
-                    timestamp: Date.now(),
-                    userId: this.currentUser.id
-                };
-
-                this.taskSizes.set(taskId, sizeData);
-                this.saveTaskSizesToStorage();
-            },
-
-            loadBidirectionalSize(taskCard) {
-                const taskId = taskCard.dataset.taskId;
-                if (!taskId || !this.taskSizes) return;
-
-                const savedSize = this.taskSizes.get(taskId);
-                if (savedSize) {
-                    if (savedSize.width) taskCard.style.width = savedSize.width + 'px';
-                    if (savedSize.height) taskCard.style.height = savedSize.height + 'px';
-                }
-            }
-        });
         taskCard.addEventListener('mouseleave', () => {
-            if (!isResizing) {
-                handle.style.opacity = '0';
-            }
+            if (!isResizing) handle.style.opacity = '0';
         });
 
-        // Mouse down - start resizing
         handle.addEventListener('mousedown', (e) => {
             e.preventDefault();
             e.stopPropagation();
 
             isResizing = true;
-            const startY = e.clientY;
-            const startHeight = taskCard.offsetHeight;
+            startY = e.clientY;
+            startHeight = taskCard.offsetHeight;
 
-            // Visual feedback
-            handle.classList.add('resizing');
-            taskCard.classList.add('resizing');
             handle.style.opacity = '1';
-            document.body.style.cursor = 'se-resize';
+            document.body.style.cursor = 'ns-resize';
             document.body.style.userSelect = 'none';
-            taskCard.style.transition = 'none';
+            tooltip.style.opacity = '1';
 
-            // Show dimensions
-            dimensions.style.opacity = '1';
-            dimensions.textContent = `${taskCard.offsetWidth} × ${startHeight}px`;
-
-            // Mouse move handler
-            const handleMouseMove = (moveEvent) => {
+            const onMouseMove = (e) => {
                 if (!isResizing) return;
 
-                const deltaY = moveEvent.clientY - startY;
+                const deltaY = e.clientY - startY;
                 let newHeight = startHeight + deltaY;
 
-                // Apply constraints
-                newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+                // ENFORCE strict minimum
+                if (newHeight < ABSOLUTE_MIN_HEIGHT) {
+                    newHeight = ABSOLUTE_MIN_HEIGHT;
+                }
+                if (newHeight > MAX_HEIGHT) {
+                    newHeight = MAX_HEIGHT;
+                }
 
-                // Update height
                 taskCard.style.height = newHeight + 'px';
-                dimensions.textContent = `${taskCard.offsetWidth} × ${Math.round(newHeight)}px`;
+                tooltip.textContent = `${Math.round(newHeight)}px`;
+
+                // Visual feedback at minimum
+                if (newHeight <= ABSOLUTE_MIN_HEIGHT) {
+                    tooltip.style.background = 'rgba(239, 68, 68, 0.9)';
+                } else {
+                    tooltip.style.background = 'rgba(0, 0, 0, 0.9)';
+                }
             };
 
-            // Mouse up handler
-            const handleMouseUp = () => {
+            const onMouseUp = () => {
                 if (!isResizing) return;
 
                 isResizing = false;
-
-                // Clean up visual state
-                handle.classList.remove('resizing');
-                taskCard.classList.remove('resizing');
-                taskCard.style.transition = '';
+                handle.style.opacity = '0';
                 document.body.style.cursor = '';
                 document.body.style.userSelect = '';
-                dimensions.style.opacity = '0';
-                handle.style.opacity = '0';
+                tooltip.style.opacity = '0';
+                tooltip.style.background = 'rgba(0, 0, 0, 0.9)';
 
-                // Save the final size
-                const finalHeight = taskCard.offsetHeight;
-                this.saveTaskSize(taskCard, finalHeight);
+                this.saveTaskSize(taskCard, taskCard.offsetHeight);
 
-                console.log(`Task ${taskCard.dataset.taskId} resized to ${finalHeight}px`);
-
-                // Remove event listeners
-                document.removeEventListener('mousemove', handleMouseMove);
-                document.removeEventListener('mouseup', handleMouseUp);
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
             };
 
-            // Attach event listeners
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
         });
 
-        // Prevent handle from triggering other events
         handle.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
         });
+    },
 
-        handle.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+    addBidirectionalResizeHandle(taskCard) {
+        const oldHandle = taskCard.querySelector('.resize-handle, .resize-handle-bidirectional');
+        if (oldHandle) oldHandle.remove();
+
+        // CRITICAL: Capture actual rendered size
+        const computedStyle = window.getComputedStyle(taskCard);
+        const defaultHeight = parseInt(computedStyle.height);
+        const defaultWidth = parseInt(computedStyle.width);
+
+        const taskId = taskCard.dataset.taskId;
+        if (!this.defaultTaskSizes.has(taskId)) {
+            this.defaultTaskSizes.set(taskId, { width: defaultWidth, height: defaultHeight });
+        }
+
+        const handle = document.createElement('div');
+        handle.className = 'resize-handle-bidirectional';
+        handle.innerHTML = '⋰';
+        handle.title = 'Resize';
+        handle.style.cssText = `
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 20px;
+            height: 20px;
+            cursor: nwse-resize;
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        `;
+
+        const tooltip = document.createElement('div');
+        tooltip.style.cssText = `
+            position: absolute;
+            bottom: 25px;
+            right: 0;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+        `;
+
+        taskCard.appendChild(handle);
+        taskCard.appendChild(tooltip);
+
+        let isResizing = false;
+        let startX, startY, startWidth, startHeight;
+
+        // STRICT minimums based on actual defaults
+        const ABSOLUTE_MIN_WIDTH = defaultWidth;
+        const ABSOLUTE_MIN_HEIGHT = defaultHeight;
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+
+        taskCard.addEventListener('mouseenter', () => {
+            if (!isResizing) handle.style.opacity = '0.7';
         });
 
-        // Store cleanup function
-        taskCard._cleanupResize = () => {
-            if (handle.parentNode) handle.remove();
-            if (dimensions.parentNode) dimensions.remove();
-            taskCard.style.height = '';
-            taskCard.style.transition = '';
-            taskCard.classList.remove('resizing');
-        };
+        taskCard.addEventListener('mouseleave', () => {
+            if (!isResizing) handle.style.opacity = '0';
+        });
+
+        handle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            isResizing = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = taskCard.offsetWidth;
+            startHeight = taskCard.offsetHeight;
+
+            handle.style.opacity = '1';
+            document.body.style.cursor = 'nwse-resize';
+            document.body.style.userSelect = 'none';
+            tooltip.style.opacity = '1';
+
+            const onMouseMove = (e) => {
+                if (!isResizing) return;
+
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+
+                let newWidth = startWidth + deltaX;
+                let newHeight = startHeight + deltaY;
+
+                // ENFORCE strict minimums
+                if (newWidth < ABSOLUTE_MIN_WIDTH) newWidth = ABSOLUTE_MIN_WIDTH;
+                if (newWidth > MAX_WIDTH) newWidth = MAX_WIDTH;
+                if (newHeight < ABSOLUTE_MIN_HEIGHT) newHeight = ABSOLUTE_MIN_HEIGHT;
+                if (newHeight > MAX_HEIGHT) newHeight = MAX_HEIGHT;
+
+                taskCard.style.width = newWidth + 'px';
+                taskCard.style.height = newHeight + 'px';
+                tooltip.textContent = `${Math.round(newWidth)} × ${Math.round(newHeight)}px`;
+
+                // Visual feedback at minimums
+                if (newWidth <= ABSOLUTE_MIN_WIDTH || newHeight <= ABSOLUTE_MIN_HEIGHT) {
+                    tooltip.style.background = 'rgba(239, 68, 68, 0.9)';
+                } else {
+                    tooltip.style.background = 'rgba(0, 0, 0, 0.9)';
+                }
+            };
+
+            const onMouseUp = () => {
+                if (!isResizing) return;
+
+                isResizing = false;
+                handle.style.opacity = '0';
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+                tooltip.style.opacity = '0';
+                tooltip.style.background = 'rgba(0, 0, 0, 0.9)';
+
+                this.saveBidirectionalSize(taskCard, taskCard.offsetWidth, taskCard.offsetHeight);
+
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            };
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
     },
 
     saveTaskSize(taskCard, height) {
         const taskId = taskCard.dataset.taskId;
         if (!taskId || !this.currentUser) return;
 
-        const sizeData = {
-            height: height,
+        this.taskSizes.set(taskId, {
+            height,
             timestamp: Date.now(),
             userId: this.currentUser.id
-        };
+        });
 
-        this.taskSizes.set(taskId, sizeData);
+        this.saveTaskSizesToStorage();
+    },
+
+    saveBidirectionalSize(taskCard, width, height) {
+        const taskId = taskCard.dataset.taskId;
+        if (!taskId || !this.currentUser) return;
+
+        this.taskSizes.set(taskId, {
+            width,
+            height,
+            timestamp: Date.now(),
+            userId: this.currentUser.id
+        });
+
         this.saveTaskSizesToStorage();
     },
 
@@ -287,107 +303,73 @@ Object.assign(TaskFlowDashboard.prototype, {
         const taskId = taskCard.dataset.taskId;
         if (!taskId || !this.taskSizes) return;
 
-        const savedSize = this.taskSizes.get(taskId);
-        if (savedSize && savedSize.height) {
-            taskCard.style.height = savedSize.height + 'px';
+        const saved = this.taskSizes.get(taskId);
+        if (saved?.height) {
+            taskCard.style.height = saved.height + 'px';
+        }
+    },
+
+    loadBidirectionalSize(taskCard) {
+        const taskId = taskCard.dataset.taskId;
+        if (!taskId || !this.taskSizes) return;
+
+        const saved = this.taskSizes.get(taskId);
+        if (saved) {
+            if (saved.width) taskCard.style.width = saved.width + 'px';
+            if (saved.height) taskCard.style.height = saved.height + 'px';
         }
     },
 
     saveTaskSizesToStorage() {
         if (!this.currentUser || !this.taskSizes) return;
 
-        try {
-            const key = `taskflow-task-sizes-${this.currentUser.id}`;
-            const data = {};
-
-            this.taskSizes.forEach((value, key) => {
-                data[key] = value;
-            });
-
-            localStorage.setItem(key, JSON.stringify(data));
-        } catch (error) {
-            console.error('Error saving task sizes:', error);
-        }
+        const key = `taskflow-task-sizes-${this.currentUser.id}`;
+        const data = Object.fromEntries(this.taskSizes);
+        localStorage.setItem(key, JSON.stringify(data));
     },
 
     loadTaskSizesFromStorage() {
         if (!this.currentUser) return;
 
-        try {
-            const key = `taskflow-task-sizes-${this.currentUser.id}`;
-            const saved = localStorage.getItem(key);
+        const key = `taskflow-task-sizes-${this.currentUser.id}`;
+        const saved = localStorage.getItem(key);
 
-            if (saved) {
-                const data = JSON.parse(saved);
-                this.taskSizes = new Map(Object.entries(data));
-                console.log(`Loaded ${this.taskSizes.size} saved task sizes`);
-            } else {
-                this.taskSizes = new Map();
-            }
-        } catch (error) {
-            console.error('Error loading task sizes:', error);
+        if (saved) {
+            const data = JSON.parse(saved);
+            this.taskSizes = new Map(Object.entries(data));
+            console.log(`Loaded ${this.taskSizes.size} saved sizes`);
+        } else {
             this.taskSizes = new Map();
         }
     },
 
     resetTaskSize(taskId) {
-        if (!taskId) return;
-
         this.taskSizes.delete(taskId);
         this.saveTaskSizesToStorage();
 
-        const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
-        if (taskCard) {
-            taskCard.style.height = '';
-        }
-
-        if (this.showNotification) {
-            this.showNotification('Task size reset', 'info');
-        }
-    },
-
-    resetAllTaskSizes() {
-        if (!confirm('Reset all task sizes to default?')) {
-            return;
-        }
-
-        this.taskSizes.clear();
-        this.saveTaskSizesToStorage();
-
-        document.querySelectorAll('.task-card').forEach(card => {
+        const card = document.querySelector(`[data-task-id="${taskId}"]`);
+        if (card) {
             card.style.height = '';
-        });
+            card.style.width = '';
+        }
 
         if (this.showNotification) {
-            this.showNotification('All task sizes reset to default', 'info');
+            this.showNotification('Size reset', 'info');
         }
     },
 
     enhanceTaskWithResize(taskCard) {
         this.addResizeHandle(taskCard);
         this.loadTaskSize(taskCard);
-    },
-
-    removeTaskResize() {
-        document.querySelectorAll('.task-card').forEach(card => {
-            if (card._cleanupResize) {
-                card._cleanupResize();
-                delete card._cleanupResize;
-            }
-        });
     }
 });
 
-// Auto-initialize when dashboard is ready
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    const initResize = () => {
-        if (window.dashboard && window.dashboard.initTaskResize) {
+    setTimeout(() => {
+        if (window.dashboard?.initTaskResize) {
             window.dashboard.initTaskResize();
-            console.log('✅ Task resize system ready');
-        } else {
-            setTimeout(initResize, 500);
+            console.log('✅ Resize ready');
         }
-    };
-
-    setTimeout(initResize, 1000);
+    }, 1000);
 });

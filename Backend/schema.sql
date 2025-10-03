@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS organizations (
                                              created_by INTEGER NOT NULL,
                                              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                                              FOREIGN KEY (created_by) REFERENCES users(id)
-    );
+);
 
 -- User sessions for login tracking
 CREATE TABLE IF NOT EXISTS user_sessions (
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS user_sessions (
                                              expires_at DATETIME NOT NULL,
                                              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                                              FOREIGN KEY (user_id) REFERENCES users(id)
-    );
+);
 
 -- Tasks table
 CREATE TABLE IF NOT EXISTS tasks (
@@ -38,11 +38,12 @@ CREATE TABLE IF NOT EXISTS tasks (
                                      priority TEXT DEFAULT 'medium',
                                      type TEXT DEFAULT 'individual',
                                      due_date DATETIME,
+                                     color TEXT DEFAULT NULL,
                                      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                                      FOREIGN KEY (user_id) REFERENCES users(id)
-    );
+);
 
--- Subtasks table - NEW
+-- Subtasks table
 CREATE TABLE IF NOT EXISTS subtasks (
                                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                                         parent_task_id INTEGER NOT NULL,
@@ -50,4 +51,4 @@ CREATE TABLE IF NOT EXISTS subtasks (
                                         completed BOOLEAN DEFAULT FALSE,
                                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                                         FOREIGN KEY (parent_task_id) REFERENCES tasks(id) ON DELETE CASCADE
-    );
+);

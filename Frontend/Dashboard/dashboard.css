@@ -2420,5 +2420,13 @@ body.fluid-mode .task-card {
 .task-card.newly-duplicated {
     animation: duplicateAppear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+@keyframes collision-shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
 
+.collision-shake {
+    animation: collision-shake 0.5s;
+}
 /* ===== END OF CONTEXT MENU STYLES ===== */

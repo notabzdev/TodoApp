@@ -506,38 +506,43 @@ if (typeof window.TaskFlowDashboard !== 'undefined') {
             const completedClass = task.completed ? 'completed' : '';
             const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString() : '';
 
+            // Apply saved color if it exists
+            const colorStyle = task.color ? `style="background: ${task.color} !important;"` : '';
+
             return `
-            <div class="task-card ${typeClass} ${priorityClass} ${completedClass}" data-task-id="${task.id}">
-                <div class="task-header">
-                    <div class="task-left">
-                        <button class="task-action-btn complete-btn" title="${task.completed ? 'Mark Incomplete' : 'Mark Complete'}">
-                            ${task.completed ? '✓' : ''}
-                        </button>
-                        <h4 class="task-title" data-field="title" contenteditable="false">${this.escapeHtml(task.title)}</h4>
-                    </div>
-                    <div class="task-actions">
-                        <button class="task-action-btn edit-btn" title="Edit Task">✏️</button>
-                        <button class="task-action-btn delete-btn" title="Delete Task">🗑️</button>
-                    </div>
+        <div class="task-card ${typeClass} ${priorityClass} ${completedClass}" 
+             data-task-id="${task.id}" 
+             ${colorStyle}>
+            <div class="task-header">
+                <div class="task-left">
+                    <button class="task-action-btn complete-btn" title="${task.completed ? 'Mark Incomplete' : 'Mark Complete'}">
+                        ${task.completed ? '✓' : ''}
+                    </button>
+                    <h4 class="task-title" data-field="title" contenteditable="false">${this.escapeHtml(task.title)}</h4>
                 </div>
-                
-                ${task.description ?
+                <div class="task-actions">
+                    <button class="task-action-btn edit-btn" title="Edit Task">✏️</button>
+                    <button class="task-action-btn delete-btn" title="Delete Task">🗑️</button>
+                </div>
+            </div>
+            
+            ${task.description ?
                 `<p class="task-description" data-field="description" contenteditable="false">${this.escapeHtml(task.description)}</p>` :
                 `<p class="task-description" data-field="description" contenteditable="false"><em style="opacity: 0.5;">Click to add description...</em></p>`
             }
-                
-                <div class="edit-controls">
-                    <button class="save-btn" title="Save Changes"></button>
-                    <button class="cancel-btn" title="Cancel Editing"></button>
-                </div>
-                
-                <div class="task-meta">
-                    <span class="task-priority priority-${task.priority}">${task.priority.toUpperCase()}</span>
-                    ${dueDate ? `<span class="task-due-date">📅 ${dueDate}</span>` : ''}
-                    <span class="task-type">${task.type === 'group' ? '📁 Group' : '📋 Task'}</span>
-                </div>
+            
+            <div class="edit-controls">
+                <button class="save-btn" title="Save Changes"></button>
+                <button class="cancel-btn" title="Cancel Editing"></button>
             </div>
-        `;
+            
+            <div class="task-meta">
+                <span class="task-priority priority-${task.priority}">${task.priority.toUpperCase()}</span>
+                ${dueDate ? `<span class="task-due-date">📅 ${dueDate}</span>` : ''}
+                <span class="task-type">${task.type === 'group' ? '📁 Group' : '📋 Task'}</span>
+            </div>
+        </div>
+    `;
         }
 
         showNotification(message, type = 'info') {

@@ -468,15 +468,15 @@ Object.assign(TaskFlowDashboard.prototype, {
         savedColors[taskId] = color;
         localStorage.setItem('taskflow-task-colors', JSON.stringify(savedColors));
 
-        // Also save to task object and sync with server
+        // Update task object and sync with server
         const task = this.tasks?.find(t => t.id == taskId);
         if (task) {
-            task.color = color.value;
-            task.colorData = color; // Store full color data
-
-            // Update on server if possible
-            this.updateTaskColorOnServer(taskId, color);
+            // Store the gradient background as the color value for the database
+            task.color = color.bg; // Changed from color.value to color.bg
         }
+
+        // Update on server with the full gradient
+        this.updateTaskColorOnServer(taskId, color.bg); // Changed to send color.bg
 
         if (this.showNotification) {
             this.showNotification(`Task color changed to ${color.name}`, 'success');
@@ -485,8 +485,8 @@ Object.assign(TaskFlowDashboard.prototype, {
         console.log('Color applied and saved:', taskId, color.name);
     },
 
-    // Update color on server (optional - for backend persistence)
-    async updateTaskColorOnServer(taskId, color) {
+// Update color on server
+    async updateTaskColorOnServer(taskId, colorValue) {
         try {
             const response = await fetch(`/api/tasks/${taskId}`, {
                 method: 'PUT',
@@ -495,17 +495,17 @@ Object.assign(TaskFlowDashboard.prototype, {
                     'Authorization': localStorage.getItem('sessionToken')
                 },
                 body: JSON.stringify({
-                    color: color.value,
-                    colorData: JSON.stringify(color)
+                    color: colorValue // Send the full gradient string
                 })
             });
 
             if (response.ok) {
-                console.log('Color saved to server:', taskId);
+                console.log('✅ Color saved to database:', taskId);
+            } else {
+                console.error('❌ Failed to save color to database');
             }
         } catch (error) {
-            console.log('Could not save color to server (using localStorage fallback):', error);
-            // This is OK - colors will still work via localStorage
+            console.error('❌ Error saving color to server:', error);
         }
     },
 
