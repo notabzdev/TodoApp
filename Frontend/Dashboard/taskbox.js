@@ -25,8 +25,8 @@ Object.assign(TaskFlowDashboard.prototype, {
         }
 
         const handler = (e) => {
-            // Ignore if clicking on interactive elements
-            if (e.target.closest('.resize-handle, .resize-handle-bidirectional, button, input, [contenteditable="true"]')) {
+            // Ignore if clicking on interactive elements INCLUDING group buttons
+            if (e.target.closest('.resize-handle, .resize-handle-bidirectional, .resize-handle-fluid, button, input, [contenteditable="true"], .group-expand-btn, .add-subtask-btn')) {
                 return;
             }
 
@@ -138,11 +138,21 @@ Object.assign(TaskFlowDashboard.prototype, {
         ];
 
         // Add expand/collapse for group tasks
+        // Add expand/collapse for group tasks
         if (isGroup) {
+            const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+            const container = taskCard?.querySelector('.subtasks-container');
+            const isExpanded = container?.classList.contains('expanded');
+
             items.splice(3, 0, {
                 icon: '📂',
-                text: this.expandedGroups.has(taskId) ? 'Collapse' : 'Expand',
-                action: () => this.toggleGroupExpansion(taskCard)
+                text: isExpanded ? 'Collapse' : 'Expand',
+                action: () => {
+                    // Call the function from dashboardthree.js using groupId, not taskCard
+                    if (this.toggleGroupExpansion) {
+                        this.toggleGroupExpansion(taskId);
+                    }
+                }
             });
         }
 
@@ -583,69 +593,8 @@ Object.assign(TaskFlowDashboard.prototype, {
     },
 
     // ========== GROUP EXPANSION ==========
-    toggleGroupExpansion(taskCard) {
-        const taskId = taskCard.dataset.taskId;
-        const subtasksContainer = taskCard.querySelector('.subtasks-container');
-        const expandBtn = taskCard.querySelector('.group-expand-btn');
 
-        if (!subtasksContainer) return;
-
-        const isExpanded = subtasksContainer.classList.contains('expanded');
-
-        if (isExpanded) {
-            this.collapseGroup(taskId, subtasksContainer, expandBtn);
-        } else {
-            this.expandGroup(taskId, subtasksContainer, expandBtn);
-        }
-
-        localStorage.setItem('taskflow-expanded-groups', JSON.stringify([...this.expandedGroups]));
-    },
-
-    collapseGroup(taskId, container, btn) {
-        container.classList.remove('expanded');
-        container.style.maxHeight = '0';
-        container.style.opacity = '0';
-        container.style.padding = '0';
-
-        if (btn) {
-            btn.innerHTML = '▼';
-            btn.classList.remove('expanded');
-            btn.style.transform = 'rotate(0deg)';
-        }
-
-        this.expandedGroups.delete(taskId);
-    },
-
-    expandGroup(taskId, container, btn) {
-        container.classList.add('expanded');
-        container.style.maxHeight = container.scrollHeight + 'px';
-        container.style.opacity = '1';
-        container.style.padding = '1rem';
-
-        if (btn) {
-            btn.innerHTML = '▲';
-            btn.classList.add('expanded');
-            btn.style.transform = 'rotate(180deg)';
-        }
-
-        this.expandedGroups.add(taskId);
-    },
-
-    restoreExpandedGroups() {
-        const expandedGroups = JSON.parse(localStorage.getItem('taskflow-expanded-groups') || '[]');
-        this.expandedGroups = new Set(expandedGroups);
-
-        expandedGroups.forEach(taskId => {
-            const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
-            if (taskCard) {
-                const container = taskCard.querySelector('.subtasks-container');
-                const btn = taskCard.querySelector('.group-expand-btn');
-                if (container) {
-                    this.expandGroup(taskId, container, btn);
-                }
-            }
-        });
-    },
+    //removed it because of overlap
 
     // ========== VISUAL EFFECTS ==========
     addVisualEffects(taskCard) {

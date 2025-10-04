@@ -1,36 +1,60 @@
-/* Task Resize Functionality - FIXED VERSION */
+/* ===== FIXED RESIZE.CSS - Optimized for Group Tasks ===== */
+
+/* Task Card Base - NO HEIGHT TRANSITION */
 .task-card {
     position: relative;
-    resize: none; /* Disable default browser resize */
+    resize: none;
     min-height: 180px;
-    max-height: 600px;
-    transition: height 0.3s ease;
-    cursor: default !important; /* Fixed cursor conflicts */
+    /* CRITICAL: Only transition visual properties, NOT height/width */
+    transition: transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease,
+    opacity 0.3s ease !important;
+    cursor: default;
 }
 
-/* Resize handle - FIXED positioning and interactions */
-.resize-handle {
+/* Group tasks - INSTANT height changes */
+.task-card.task-group {
+    min-height: 250px;
+    /* Override any inherited height transitions */
+    transition: transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease,
+    opacity 0.3s ease !important;
+}
+
+/* Resize Handle */
+.resize-handle,
+.resize-handle-bidirectional,
+.resize-handle-fluid {
     position: absolute;
     bottom: 0;
     right: 0;
     width: 20px;
     height: 20px;
     background: var(--accent-primary);
-    cursor: se-resize !important; /* Fixed cursor type */
+    cursor: se-resize;
     border-radius: 4px 0 8px 0;
     opacity: 0;
-    transition: all 0.3s ease;
-    z-index: 1000 !important; /* Fixed z-index conflicts */
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     font-size: 8px;
     user-select: none;
-    line-height: 1;
+    pointer-events: auto;
 }
 
-.resize-handle::before {
+.resize-handle-bidirectional,
+.resize-handle-fluid {
+    cursor: nwse-resize;
+}
+
+.resize-handle::before,
+.resize-handle-bidirectional::before,
+.resize-handle-fluid::before {
     content: "⋱⋱";
     font-size: 8px;
     line-height: 1;
@@ -38,135 +62,124 @@
     pointer-events: none;
 }
 
-/* Show handle on task hover - FIXED */
-.task-card:hover .resize-handle {
-    opacity: 0.7 !important;
+/* Show handle on hover */
+.task-card:hover .resize-handle,
+.task-card:hover .resize-handle-bidirectional,
+.task-card:hover .resize-handle-fluid {
+    opacity: 0.7;
 }
 
-.task-card .resize-handle:hover {
-    opacity: 1 !important;
+.resize-handle:hover,
+.resize-handle-bidirectional:hover,
+.resize-handle-fluid:hover {
+    opacity: 1;
     transform: scale(1.1);
     box-shadow: 0 2px 8px rgba(219, 39, 119, 0.4);
-    background: var(--accent-secondary) !important;
+    background: var(--accent-secondary);
 }
 
-/* Resize indicator - FIXED */
+/* Resizing state - NO TRANSITIONS */
 .task-card.resizing {
     transition: none !important;
-    user-select: none !important;
-    box-shadow: 0 0 20px rgba(219, 39, 119, 0.5) !important;
-    border-color: var(--accent-primary) !important;
+    user-select: none;
+    box-shadow: 0 0 20px rgba(219, 39, 119, 0.5);
+    border-color: var(--accent-primary);
 }
 
-.task-card.resizing .resize-handle {
-    opacity: 1 !important;
-    background: var(--accent-secondary) !important;
-    transform: scale(1.2) !important;
-    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.6) !important;
+.task-card.resizing .resize-handle,
+.task-card.resizing .resize-handle-bidirectional,
+.task-card.resizing .resize-handle-fluid {
+    opacity: 1;
+    background: var(--accent-secondary);
+    transform: scale(1.2);
+    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.6);
 }
 
-.resize-handle.resizing {
-    opacity: 1 !important;
-    transform: scale(1.2) !important;
-    box-shadow: 0 4px 12px rgba(219, 39, 119, 0.6) !important;
-}
-
-/* Size constraints for different task types */
+/* Size constraints */
 .task-card.task-individual {
-    min-height: 180px;
     max-height: 400px;
 }
 
 .task-card.task-group {
-    min-height: 250px;
-    max-height: 600px;
+    max-height: 800px;
 }
 
-/* Content overflow handling - FIXED */
-.task-card .task-content {
-    height: calc(100% - 20px); /* Account for resize handle */
-    overflow-y: auto;
-    padding-bottom: 20px; /* Space for resize handle */
-}
-
-/* Hide scrollbar but keep functionality */
-.task-content::-webkit-scrollbar {
-    width: 4px;
-}
-
-.task-content::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.task-content::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 2px;
-}
-
-.task-content::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-primary);
-}
-
-/* Resize dimensions display - FIXED */
+/* Resize tooltip */
+.resize-tooltip,
 .resize-dimensions {
     position: absolute;
-    top: -35px;
+    bottom: 25px;
     right: 0;
     background: rgba(0, 0, 0, 0.9);
     color: white;
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 11px;
-    font-weight: 500;
     opacity: 0;
-    transition: opacity 0.3s ease;
     pointer-events: none;
-    z-index: 1001;
     white-space: nowrap;
+    z-index: 1001;
+    transition: opacity 0.2s ease;
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.task-card.resizing .resize-tooltip,
 .task-card.resizing .resize-dimensions {
-    opacity: 1 !important;
+    opacity: 1;
 }
 
-/* Theme-specific resize handle colors */
-.theme-corporate .resize-handle {
+/* Fluid mode overrides */
+body.fluid-mode .task-card {
+    position: absolute;
+    min-width: 250px;
+    max-width: 600px;
+    width: 300px;
+    /* Still no height transition even in fluid mode */
+    transition: transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease !important;
+}
+
+/* Theme-specific resize handles */
+.theme-corporate .resize-handle,
+.theme-corporate .resize-handle-bidirectional,
+.theme-corporate .resize-handle-fluid {
     background: #3b82f6;
 }
 
-.theme-nature .resize-handle {
+.theme-nature .resize-handle,
+.theme-nature .resize-handle-bidirectional,
+.theme-nature .resize-handle-fluid {
     background: #84cc16;
 }
 
-.theme-dark .resize-handle {
+.theme-dark .resize-handle,
+.theme-dark .resize-handle-bidirectional,
+.theme-dark .resize-handle-fluid {
     background: #8b5cf6;
 }
 
-.theme-sky .resize-handle {
+.theme-sky .resize-handle,
+.theme-sky .resize-handle-bidirectional,
+.theme-sky .resize-handle-fluid {
     background: #0ea5e9;
 }
 
-.theme-neon .resize-handle {
+.theme-neon .resize-handle,
+.theme-neon .resize-handle-bidirectional,
+.theme-neon .resize-handle-fluid {
     background: #ff0080;
     box-shadow: 0 0 10px rgba(255, 0, 128, 0.6);
 }
 
-/* Prevent conflicts with other interactions */
-.resize-handle {
-    pointer-events: auto !important;
-}
-
-.task-card:not(.resizing) .resize-handle {
-    pointer-events: auto;
-}
-
-/* Responsive adjustments */
+/* Mobile adjustments */
 @media (max-width: 768px) {
-    .resize-handle {
+    .resize-handle,
+    .resize-handle-bidirectional,
+    .resize-handle-fluid {
         width: 24px;
         height: 24px;
-        opacity: 0.5; /* More visible on mobile */
+        opacity: 0.5;
     }
 
     .task-card.task-individual {

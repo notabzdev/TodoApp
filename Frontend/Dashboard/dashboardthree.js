@@ -1,17 +1,14 @@
-// Group Task Management and Subtask Functionality
-// Optimized version with color persistence
+// ===== COMPLETE GROUP TASK REWRITE - FIXED =====
+// Handles group tasks, subtasks, and expansion WITHOUT resize conflicts
 
 Object.assign(TaskFlowDashboard.prototype, {
-    // Override createTaskHTML to handle group tasks with color support
-    createTaskHTML(task) {
-        // Apply saved color if it exists
-        const colorStyle = task.color ? `style="background: ${task.color} !important;"` : '';
 
-        if (task.type === 'group') {
-            return this.createGroupTaskHTML(task, colorStyle);
-        } else {
-            return this.createIndividualTaskHTML(task, colorStyle);
-        }
+    // ========== TASK HTML GENERATION ==========
+    createTaskHTML(task) {
+        const colorStyle = task.color ? `style="background: ${task.color} !important;"` : '';
+        return task.type === 'group' ?
+            this.createGroupTaskHTML(task, colorStyle) :
+            this.createIndividualTaskHTML(task, colorStyle);
     },
 
     createIndividualTaskHTML(task, colorStyle = '') {
@@ -59,9 +56,13 @@ Object.assign(TaskFlowDashboard.prototype, {
         const totalSubtasks = subtasks.length;
         const progressPercent = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
 
+        // Check if this group should be expanded
+        const isExpanded = this.expandedGroups && this.expandedGroups.has(String(task.id));
+
         return `
             <div class="task-card task-group ${priorityClass} ${completedClass}" 
                  data-task-id="${task.id}"
+                 data-natural-height="auto"
                  ${colorStyle}>
                 <div class="task-header">
                     <div class="task-left">
@@ -91,7 +92,7 @@ Object.assign(TaskFlowDashboard.prototype, {
                     </div>
                 </div>
 
-                <div class="subtasks-container" data-group-id="${task.id}">
+                <div class="subtasks-container ${isExpanded ? 'expanded' : ''}" data-group-id="${task.id}">
                     <div class="subtasks-header">
                         <div class="subtasks-title">
                             Subtasks
@@ -121,9 +122,9 @@ Object.assign(TaskFlowDashboard.prototype, {
                     <span class="task-type">📁 Group</span>
                 </div>
 
-                <button class="group-expand-btn" data-group-id="${task.id}" title="Expand/Collapse">
-                    ▼
-                </button>
+                <button class="group-expand-btn ${isExpanded ? 'expanded' : ''}" 
+                        data-group-id="${task.id}" 
+                        title="Expand/Collapse">▼</button>
             </div>
         `;
     },
@@ -146,7 +147,7 @@ Object.assign(TaskFlowDashboard.prototype, {
         `).join('');
     },
 
-    // Enhanced setupTaskEventListeners
+    // ========== EVENT LISTENERS ==========
     setupTaskEventListeners() {
         this.setupBasicTaskListeners();
         this.setupGroupTaskListeners();
@@ -177,21 +178,25 @@ Object.assign(TaskFlowDashboard.prototype, {
     },
 
     setupGroupTaskListeners() {
+        // Expand/Collapse buttons
         document.querySelectorAll('.group-expand-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
-                const groupId = btn.dataset.groupId;
-                this.toggleGroupExpansion(groupId);
+                this.toggleGroupExpansion(btn.dataset.groupId);
             });
         });
 
+        // Add subtask buttons
         document.querySelectorAll('.add-subtask-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 this.showSubtaskForm(btn.dataset.groupId);
             });
         });
 
+        // Subtask forms
         document.querySelectorAll('.subtask-form').forEach(form => {
             const saveBtn = form.querySelector('.subtask-save-btn');
             const cancelBtn = form.querySelector('.subtask-cancel-btn');
@@ -211,51 +216,97 @@ Object.assign(TaskFlowDashboard.prototype, {
             });
         });
 
+        // Subtask checkboxes
         document.querySelectorAll('.subtask-checkbox').forEach(checkbox => {
             checkbox.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const subtaskId = checkbox.closest('.subtask-item').dataset.subtaskId;
-                this.toggleSubtaskComplete(subtaskId);
+                this.toggleSubtaskComplete(checkbox.closest('.subtask-item').dataset.subtaskId);
             });
         });
 
+        // Delete subtask buttons
         document.querySelectorAll('.delete-subtask-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const subtaskId = btn.closest('.subtask-item').dataset.subtaskId;
-                this.deleteSubtask(subtaskId);
+                this.deleteSubtask(btn.closest('.subtask-item').dataset.subtaskId);
             });
         });
     },
 
+    // ========== GROUP EXPANSION (FIXED) ==========
     toggleGroupExpansion(groupId) {
         const taskCard = document.querySelector(`[data-task-id="${groupId}"]`);
+        if (!taskCard) return;
+
         const container = taskCard.querySelector('.subtasks-container');
         const btn = taskCard.querySelector('.group-expand-btn');
 
-        if (container.classList.contains('expanded')) {
-            container.classList.remove('expanded');
-            btn.innerHTML = '▼';
+        if (!container || !btn) return;
+
+        const isExpanded = container.classList.contains('expanded');
+
+        if (isExpanded) {
+            // COLLAPSE
+            this.collapseGroup(groupId, taskCard, container, btn);
         } else {
-            container.classList.add('expanded');
-            btn.innerHTML = '▲';
+            // EXPAND
+            this.expandGroup(groupId, taskCard, container, btn);
         }
     },
 
+    collapseGroup(groupId, taskCard, container, btn) {
+        // Remove from expanded set
+        if (this.expandedGroups) {
+            this.expandedGroups.delete(String(groupId));
+            this.saveExpandedGroups();
+        }
+
+        // Update UI
+        container.classList.remove('expanded');
+        btn.innerHTML = '▼';
+        btn.classList.remove('expanded');
+
+        // Reset height to natural (CSS will handle it)
+        taskCard.style.height = '';
+
+        console.log('Group collapsed:', groupId);
+    },
+
+    expandGroup(groupId, taskCard, container, btn) {
+        // Add to expanded set
+        if (!this.expandedGroups) {
+            this.expandedGroups = new Set();
+        }
+        this.expandedGroups.add(String(groupId));
+        this.saveExpandedGroups();
+
+        // Update UI - CSS handles the animation
+        container.classList.add('expanded');
+        btn.innerHTML = '▲';
+        btn.classList.add('expanded');
+
+        // Let CSS handle height naturally
+        taskCard.style.height = '';
+
+        console.log('Group expanded:', groupId);
+    },
+
+    // ========== SUBTASK FORM ==========
     showSubtaskForm(groupId) {
         const form = document.querySelector(`.subtask-form[data-group-id="${groupId}"]`);
-        const input = form.querySelector('.subtask-input');
+        if (!form) return;
         form.classList.add('active');
-        input.focus();
+        form.querySelector('.subtask-input').focus();
     },
 
     hideSubtaskForm(groupId) {
         const form = document.querySelector(`.subtask-form[data-group-id="${groupId}"]`);
-        const input = form.querySelector('.subtask-input');
+        if (!form) return;
         form.classList.remove('active');
-        input.value = '';
+        form.querySelector('.subtask-input').value = '';
     },
 
+    // ========== SUBTASK CRUD ==========
     async saveSubtask(groupId, title) {
         if (!title) {
             this.showNotification('Please enter a subtask title', 'error');
@@ -325,7 +376,7 @@ Object.assign(TaskFlowDashboard.prototype, {
         }
     },
 
-    // Override loadTasks to include subtasks
+    // ========== DATA LOADING ==========
     async loadTasks() {
         if (this.isLoadingTasks) return;
         this.isLoadingTasks = true;
@@ -372,5 +423,68 @@ Object.assign(TaskFlowDashboard.prototype, {
                 groupTask.subtasks = [];
             }
         }
+    },
+
+    // ========== EXPANSION STATE PERSISTENCE ==========
+    saveExpandedGroups() {
+        if (!this.expandedGroups || !this.currentUser) return;
+
+        const key = `taskflow-expanded-groups-${this.currentUser.id}`;
+        const data = Array.from(this.expandedGroups);
+        localStorage.setItem(key, JSON.stringify(data));
+        console.log('Saved expanded groups:', data);
+    },
+
+    loadExpandedGroups() {
+        if (!this.currentUser) return;
+
+        const key = `taskflow-expanded-groups-${this.currentUser.id}`;
+        const saved = localStorage.getItem(key);
+
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                this.expandedGroups = new Set(data);
+                console.log('Loaded expanded groups:', data);
+            } catch (error) {
+                console.error('Error loading expanded groups:', error);
+                this.expandedGroups = new Set();
+            }
+        } else {
+            this.expandedGroups = new Set();
+        }
+    },
+
+    restoreExpandedGroups() {
+        if (!this.expandedGroups) return;
+
+        this.expandedGroups.forEach(groupId => {
+            const taskCard = document.querySelector(`[data-task-id="${groupId}"]`);
+            if (taskCard) {
+                const container = taskCard.querySelector('.subtasks-container');
+                const btn = taskCard.querySelector('.group-expand-btn');
+
+                if (container && btn && !container.classList.contains('expanded')) {
+                    container.classList.add('expanded');
+                    btn.classList.add('expanded');
+                    btn.innerHTML = '▲';
+                }
+            }
+        });
     }
+});
+
+// ========== INITIALIZATION ==========
+document.addEventListener('DOMContentLoaded', () => {
+    const initGroups = () => {
+        if (window.dashboard) {
+            if (!window.dashboard.expandedGroups) {
+                window.dashboard.loadExpandedGroups();
+            }
+            console.log('✅ Group tasks initialized');
+        } else {
+            setTimeout(initGroups, 500);
+        }
+    };
+    setTimeout(initGroups, 1000);
 });

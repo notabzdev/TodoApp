@@ -1,12 +1,18 @@
-/* Group Task Management and Subtask Functionality CSS */
+/* ===== GROUP TASK & SUBTASK CSS - COMPLETE REWRITE ===== */
+/* NO height transitions - instant resize */
 
-/* Group Task Enhancements */
+/* Group Task Base */
 .task-card.task-group {
     min-height: 250px;
     background: linear-gradient(135deg, var(--card-bg), rgba(255, 255, 255, 0.02));
     border: 2px solid var(--accent-primary);
     position: relative;
     overflow: visible;
+    /* CRITICAL: NO height in transition */
+    transition: transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease,
+    opacity 0.3s ease;
 }
 
 .task-card.task-group:hover {
@@ -14,6 +20,7 @@
     box-shadow: 0 12px 40px rgba(219, 39, 119, 0.3);
 }
 
+/* Group indicator badge */
 .task-card.task-group::before {
     content: "📁";
     position: absolute;
@@ -32,7 +39,6 @@
     box-shadow: 0 2px 8px rgba(219, 39, 119, 0.4);
 }
 
-/* Group task header styling */
 .task-group .task-title {
     font-size: 1.3rem;
     font-weight: 700;
@@ -40,23 +46,31 @@
     margin-bottom: 1rem;
 }
 
-/* Subtask container */
+/* ========== SUBTASKS CONTAINER ========== */
 .subtasks-container {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
+    margin-top: 0;
+    padding: 0;
+    border-top: 0 solid var(--border-color);
     max-height: 0;
     overflow: hidden;
-    transition: all 0.3s ease;
     opacity: 0;
+    /* Smooth expansion WITHOUT affecting parent height */
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease 0.05s,
+    padding 0.3s ease,
+    margin-top 0.3s ease,
+    border-top-width 0.3s ease;
 }
 
 .subtasks-container.expanded {
-    max-height: 400px;
+    max-height: 2000px;
     opacity: 1;
     padding-top: 1rem;
+    margin-top: 1rem;
+    border-top-width: 1px;
 }
 
+/* ========== SUBTASKS HEADER ========== */
 .subtasks-header {
     display: flex;
     justify-content: space-between;
@@ -101,13 +115,12 @@
     transform: translateY(-1px);
 }
 
-/* Subtask items */
+/* ========== SUBTASKS LIST ========== */
 .subtasks-list {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    max-height: 250px;
-    overflow-y: auto;
+    /* NO max-height or overflow - let it grow naturally */
 }
 
 .subtask-item {
@@ -119,7 +132,6 @@
     border: 1px solid var(--border-color);
     border-radius: 8px;
     transition: all 0.3s ease;
-    position: relative;
 }
 
 .subtask-item:hover {
@@ -202,7 +214,15 @@
     border-color: var(--accent-primary);
 }
 
-/* Group expand/collapse button */
+.empty-subtasks {
+    color: var(--text-secondary);
+    font-style: italic;
+    text-align: center;
+    padding: 1rem;
+    opacity: 0.7;
+}
+
+/* ========== EXPAND/COLLAPSE BUTTON ========== */
 .group-expand-btn {
     position: absolute;
     bottom: 1rem;
@@ -214,7 +234,8 @@
     height: 40px;
     border-radius: 50%;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -233,7 +254,11 @@
     transform: rotate(180deg);
 }
 
-/* Progress bar for group tasks */
+.group-expand-btn.expanded:hover {
+    transform: rotate(180deg) scale(1.1);
+}
+
+/* ========== PROGRESS BAR ========== */
 .group-progress {
     margin-top: 1rem;
     padding: 0.5rem 0;
@@ -264,7 +289,7 @@
     box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
 }
 
-/* Subtask creation form */
+/* ========== SUBTASK FORM ========== */
 .subtask-form {
     display: none;
     margin-top: 1rem;
@@ -303,7 +328,8 @@
     margin-top: 0.5rem;
 }
 
-.subtask-save-btn, .subtask-cancel-btn {
+.subtask-save-btn,
+.subtask-cancel-btn {
     padding: 0.5rem 1rem;
     border: none;
     border-radius: 6px;
@@ -331,7 +357,7 @@
     background: var(--border-color);
 }
 
-/* Theme-specific enhancements for group tasks */
+/* ========== THEME-SPECIFIC GROUP STYLING ========== */
 .theme-galactic .task-group {
     background: linear-gradient(135deg, rgba(248, 250, 252, 0.08), rgba(219, 39, 119, 0.05));
     border-color: #db2777;
@@ -353,7 +379,18 @@
     border-color: #8b5cf6;
 }
 
-/* Responsive adjustments for group tasks */
+.theme-sky .task-group {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(14, 165, 233, 0.05));
+    border-color: #0ea5e9;
+}
+
+.theme-neon .task-group {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.85), rgba(255, 0, 128, 0.05));
+    border-color: #ff0080;
+    box-shadow: 0 0 20px rgba(255, 0, 128, 0.3);
+}
+
+/* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
     .task-card.task-group {
         min-height: 200px;
@@ -369,76 +406,12 @@
         font-size: 1rem;
     }
 }
-/* Performance warning for animated themes - FIXED VERSION */
-.theme-card {
-    position: relative;
-}
 
-.theme-card[data-theme="sky"] .performance-warning,
-.theme-card[data-theme="neon"] .performance-warning {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 20px;
-    height: 20px;
-    background: #f59e0b;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    color: white;
-    z-index: 10;
-    cursor: help;
-    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
-    transition: all 0.3s ease;
-}
-
-.theme-card[data-theme="sky"] .performance-warning:hover,
-.theme-card[data-theme="neon"] .performance-warning:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.6);
-}
-
-/* Tooltip - FIXED: Only show on hover of warning icon */
-.performance-tooltip {
-    position: absolute;
-    top: -50px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.9);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 11px;
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition: all 0.3s ease;
-    z-index: 20;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.performance-tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 6px solid transparent;
-    border-top-color: rgba(0, 0, 0, 0.9);
-}
-
-/* FIXED: Only show tooltip when hovering over the warning icon itself */
-.performance-warning:hover .performance-tooltip {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(-50%) translateY(-2px);
-}
-
-/* Ensure warning doesn't show for non-animated themes */
-.theme-card:not([data-theme="sky"]):not([data-theme="neon"]) .performance-warning {
-    display: none;
+/* ========== FLUID MODE OVERRIDES ========== */
+body.fluid-mode .task-card.task-group {
+    /* Still no height transition in fluid mode */
+    transition: transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease,
+    opacity 0.3s ease;
 }
