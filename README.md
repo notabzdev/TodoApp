@@ -85,7 +85,7 @@ Follow these steps to set up TaskFlow on your local machine:
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/notabzdev/TodoApp.git
-cd taskflow
+cd TodoApp
 ```
 
 ### 2. Install Dependencies
