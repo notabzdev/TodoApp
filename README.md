@@ -110,7 +110,7 @@ The SQLite database (`identifier.sqlite`) will be created automatically when you
 **Note:** The database file `identifier.sqlite` is already in the root directory and will be initialized on first run.
 
 ### 4. Start the Application
-Start the server from the root directory:
+Start the server from the Backend directory:
 ```bash
 cd Backend
 node server.js
