@@ -48,7 +48,7 @@ A feature-rich, modern to-do list application with cosmic themes, advanced task 
 - **Custom Task Colors** - Personalize individual task cards with color picker
 - **Resizable Cards** - Adjust task card sizes with drag handles
 - **Flexible Layouts** - Grid view or Fluid mode with drag & drop positioning
-- 
+
 ### 👤 User Management
 - **User Registration** - Create accounts with secure password hashing
 - **User Login** - Session-based authentication with 24-hour tokens
