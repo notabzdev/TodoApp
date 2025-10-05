@@ -113,7 +113,7 @@ The SQLite database (`identifier.sqlite`) will be created automatically when you
 Start the server from the root directory:
 ```bash
 cd Backend
-npm start
+node server.js
 ```
 
 You should see:
