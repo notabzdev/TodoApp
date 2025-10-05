@@ -112,6 +112,7 @@ The SQLite database (`identifier.sqlite`) will be created automatically when you
 ### 4. Start the Application
 Start the server from the root directory:
 ```bash
+cd Backend
 npm start
 ```
 
