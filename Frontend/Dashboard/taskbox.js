@@ -654,3 +654,65 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     setTimeout(initTaskBox, 1000);
 });
+
+// ADD THIS TO integration.js or at the end of taskbox.js
+
+// Function to restore task colors from localStorage
+Object.assign(TaskFlowDashboard.prototype, {
+    restoreTaskColorsFromStorage() {
+        const savedColors = JSON.parse(localStorage.getItem('taskflow-task-colors') || '{}');
+
+        document.querySelectorAll('.task-card').forEach(card => {
+            const taskId = card.dataset.taskId;
+            const colorData = savedColors[taskId];
+
+            if (colorData) {
+                card.style.background = colorData.bg;
+                card.style.borderColor = colorData.border;
+                card.style.boxShadow = colorData.shadow;
+            }
+        });
+
+        console.log('Task colors restored from localStorage');
+    }
+});
+
+// Hook into fluid mode enter to restore colors
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (window.dashboard && window.dashboard.enterFluidMode) {
+            const originalEnter = window.dashboard.enterFluidMode;
+
+            window.dashboard.enterFluidMode = function() {
+                originalEnter.call(this);
+
+                // Restore colors after entering fluid mode
+                setTimeout(() => {
+                    if (this.restoreTaskColorsFromStorage) {
+                        this.restoreTaskColorsFromStorage();
+                    }
+                }, 600);
+            };
+        }
+    }, 1500);
+});
+
+// Also restore colors whenever tasks are rendered
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (window.dashboard && window.dashboard.renderTasks) {
+            const originalRender = window.dashboard.renderTasks;
+
+            window.dashboard.renderTasks = function() {
+                originalRender.call(this);
+
+                // Restore colors after rendering
+                setTimeout(() => {
+                    if (this.restoreTaskColorsFromStorage) {
+                        this.restoreTaskColorsFromStorage();
+                    }
+                }, 100);
+            };
+        }
+    }, 1500);
+});

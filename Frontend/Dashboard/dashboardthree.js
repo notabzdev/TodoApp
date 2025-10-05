@@ -1,5 +1,5 @@
-// ===== COMPLETE GROUP TASK REWRITE - FIXED =====
-// Handles group tasks, subtasks, and expansion WITHOUT resize conflicts
+// ===== COMPLETE GROUP TASK IMPLEMENTATION - FIXED WITH SIZE PRESERVATION =====
+// Handles group tasks, subtasks, and expansion WITHOUT losing custom sizes
 
 Object.assign(TaskFlowDashboard.prototype, {
 
@@ -119,7 +119,7 @@ Object.assign(TaskFlowDashboard.prototype, {
                 <div class="task-meta">
                     <span class="task-priority priority-${task.priority}">${task.priority.toUpperCase()}</span>
                     ${dueDate ? `<span class="task-due-date">📅 ${dueDate}</span>` : ''}
-                    <span class="task-type">📁 Group</span>
+                    <span class="task-type">📂 Group</span>
                 </div>
 
                 <button class="group-expand-btn ${isExpanded ? 'expanded' : ''}" 
@@ -233,7 +233,7 @@ Object.assign(TaskFlowDashboard.prototype, {
         });
     },
 
-    // ========== GROUP EXPANSION (FIXED) ==========
+    // ========== GROUP EXPANSION ==========
     toggleGroupExpansion(groupId) {
         const taskCard = document.querySelector(`[data-task-id="${groupId}"]`);
         if (!taskCard) return;
@@ -246,46 +246,36 @@ Object.assign(TaskFlowDashboard.prototype, {
         const isExpanded = container.classList.contains('expanded');
 
         if (isExpanded) {
-            // COLLAPSE
             this.collapseGroup(groupId, taskCard, container, btn);
         } else {
-            // EXPAND
             this.expandGroup(groupId, taskCard, container, btn);
         }
     },
 
     collapseGroup(groupId, taskCard, container, btn) {
-        // Remove from expanded set
         if (this.expandedGroups) {
             this.expandedGroups.delete(String(groupId));
             this.saveExpandedGroups();
         }
 
-        // Update UI
         container.classList.remove('expanded');
         btn.innerHTML = '▼';
         btn.classList.remove('expanded');
-
-        // Reset height to natural (CSS will handle it)
         taskCard.style.height = '';
 
         console.log('Group collapsed:', groupId);
     },
 
     expandGroup(groupId, taskCard, container, btn) {
-        // Add to expanded set
         if (!this.expandedGroups) {
             this.expandedGroups = new Set();
         }
         this.expandedGroups.add(String(groupId));
         this.saveExpandedGroups();
 
-        // Update UI - CSS handles the animation
         container.classList.add('expanded');
         btn.innerHTML = '▲';
         btn.classList.add('expanded');
-
-        // Let CSS handle height naturally
         taskCard.style.height = '';
 
         console.log('Group expanded:', groupId);
@@ -306,7 +296,7 @@ Object.assign(TaskFlowDashboard.prototype, {
         form.querySelector('.subtask-input').value = '';
     },
 
-    // ========== SUBTASK CRUD ==========
+    // ========== SUBTASK CRUD (FIXED WITH SIZE PRESERVATION) ==========
     async saveSubtask(groupId, title) {
         if (!title) {
             this.showNotification('Please enter a subtask title', 'error');
@@ -314,6 +304,19 @@ Object.assign(TaskFlowDashboard.prototype, {
         }
 
         try {
+            // CRITICAL: Capture state BEFORE reload
+            const taskCard = document.querySelector(`[data-task-id="${groupId}"]`);
+            const currentWidth = taskCard ? taskCard.offsetWidth : null;
+            const currentHeight = taskCard ? taskCard.offsetHeight : null;
+            const wasExpanded = taskCard?.querySelector('.subtasks-container')?.classList.contains('expanded');
+
+            console.log('Saving state before reload:', {
+                groupId,
+                width: currentWidth,
+                height: currentHeight,
+                wasExpanded
+            });
+
             const response = await fetch('/api/subtasks', {
                 method: 'POST',
                 headers: {
@@ -329,6 +332,56 @@ Object.assign(TaskFlowDashboard.prototype, {
             if (!response.ok) throw new Error('Failed to create subtask');
 
             await this.loadTasks();
+
+            // CRITICAL: Restore state AFTER reload
+            setTimeout(() => {
+                const updatedCard = document.querySelector(`[data-task-id="${groupId}"]`);
+
+                if (updatedCard && currentWidth && currentHeight) {
+                    updatedCard.style.width = currentWidth + 'px';
+                    updatedCard.style.height = currentHeight + 'px';
+
+                    console.log('Restored size:', { width: currentWidth, height: currentHeight });
+
+                    // Save based on mode
+                    if (this.fluidModeEnabled) {
+                        if (this.saveFluidTaskSize) {
+                            this.saveFluidTaskSize(updatedCard, currentWidth, currentHeight);
+                        }
+                    } else {
+                        if (this.saveBidirectionalSize) {
+                            this.saveBidirectionalSize(updatedCard, currentWidth, currentHeight);
+                        } else if (this.taskSizes) {
+                            this.taskSizes.set(groupId, {
+                                width: currentWidth,
+                                height: currentHeight,
+                                timestamp: Date.now(),
+                                userId: this.currentUser?.id
+                            });
+                            if (this.saveTaskSizesToStorage) {
+                                this.saveTaskSizesToStorage();
+                            }
+                        }
+                    }
+
+                    // Restore expansion
+                    if (wasExpanded) {
+                        const container = updatedCard.querySelector('.subtasks-container');
+                        const btn = updatedCard.querySelector('.group-expand-btn');
+
+                        if (container && !container.classList.contains('expanded')) {
+                            container.classList.add('expanded');
+                        }
+                        if (btn && !btn.classList.contains('expanded')) {
+                            btn.classList.add('expanded');
+                            btn.innerHTML = '▲';
+                        }
+
+                        console.log('Restored expansion state');
+                    }
+                }
+            }, 150);
+
             this.hideSubtaskForm(groupId);
             this.showNotification('Subtask added', 'success');
 
@@ -340,6 +393,15 @@ Object.assign(TaskFlowDashboard.prototype, {
 
     async toggleSubtaskComplete(subtaskId) {
         try {
+            // Find group and save state
+            const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+            const taskCard = subtaskItem?.closest('.task-card');
+            const groupId = taskCard?.dataset.taskId;
+
+            const currentWidth = taskCard ? taskCard.offsetWidth : null;
+            const currentHeight = taskCard ? taskCard.offsetHeight : null;
+            const wasExpanded = taskCard?.querySelector('.subtasks-container')?.classList.contains('expanded');
+
             const response = await fetch(`/api/subtasks/${subtaskId}/toggle`, {
                 method: 'PUT',
                 headers: { 'Authorization': localStorage.getItem('sessionToken') }
@@ -348,6 +410,34 @@ Object.assign(TaskFlowDashboard.prototype, {
             if (!response.ok) throw new Error('Failed to toggle subtask');
 
             await this.loadTasks();
+
+            // Restore state
+            if (groupId && currentWidth && currentHeight) {
+                setTimeout(() => {
+                    const updatedCard = document.querySelector(`[data-task-id="${groupId}"]`);
+                    if (updatedCard) {
+                        updatedCard.style.width = currentWidth + 'px';
+                        updatedCard.style.height = currentHeight + 'px';
+
+                        if (this.fluidModeEnabled && this.saveFluidTaskSize) {
+                            this.saveFluidTaskSize(updatedCard, currentWidth, currentHeight);
+                        } else if (this.saveBidirectionalSize) {
+                            this.saveBidirectionalSize(updatedCard, currentWidth, currentHeight);
+                        }
+
+                        if (wasExpanded) {
+                            const container = updatedCard.querySelector('.subtasks-container');
+                            const btn = updatedCard.querySelector('.group-expand-btn');
+                            if (container) container.classList.add('expanded');
+                            if (btn) {
+                                btn.classList.add('expanded');
+                                btn.innerHTML = '▲';
+                            }
+                        }
+                    }
+                }, 150);
+            }
+
             this.showNotification('Subtask updated', 'success');
 
         } catch (error) {
@@ -360,6 +450,15 @@ Object.assign(TaskFlowDashboard.prototype, {
         if (!confirm('Delete this subtask?')) return;
 
         try {
+            // Find group and save state
+            const subtaskItem = document.querySelector(`[data-subtask-id="${subtaskId}"]`);
+            const taskCard = subtaskItem?.closest('.task-card');
+            const groupId = taskCard?.dataset.taskId;
+
+            const currentWidth = taskCard ? taskCard.offsetWidth : null;
+            const currentHeight = taskCard ? taskCard.offsetHeight : null;
+            const wasExpanded = taskCard?.querySelector('.subtasks-container')?.classList.contains('expanded');
+
             const response = await fetch(`/api/subtasks/${subtaskId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': localStorage.getItem('sessionToken') }
@@ -368,6 +467,34 @@ Object.assign(TaskFlowDashboard.prototype, {
             if (!response.ok) throw new Error('Failed to delete subtask');
 
             await this.loadTasks();
+
+            // Restore state
+            if (groupId && currentWidth && currentHeight) {
+                setTimeout(() => {
+                    const updatedCard = document.querySelector(`[data-task-id="${groupId}"]`);
+                    if (updatedCard) {
+                        updatedCard.style.width = currentWidth + 'px';
+                        updatedCard.style.height = currentHeight + 'px';
+
+                        if (this.fluidModeEnabled && this.saveFluidTaskSize) {
+                            this.saveFluidTaskSize(updatedCard, currentWidth, currentHeight);
+                        } else if (this.saveBidirectionalSize) {
+                            this.saveBidirectionalSize(updatedCard, currentWidth, currentHeight);
+                        }
+
+                        if (wasExpanded) {
+                            const container = updatedCard.querySelector('.subtasks-container');
+                            const btn = updatedCard.querySelector('.group-expand-btn');
+                            if (container) container.classList.add('expanded');
+                            if (btn) {
+                                btn.classList.add('expanded');
+                                btn.innerHTML = '▲';
+                            }
+                        }
+                    }
+                }, 150);
+            }
+
             this.showNotification('Subtask deleted', 'success');
 
         } catch (error) {
@@ -480,6 +607,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.dashboard) {
             if (!window.dashboard.expandedGroups) {
                 window.dashboard.loadExpandedGroups();
+            }
+            // Ensure resize tracking is initialized
+            if (!window.dashboard.taskSizes) {
+                window.dashboard.taskSizes = new Map();
             }
             console.log('✅ Group tasks initialized');
         } else {

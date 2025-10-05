@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/Dashboard/dashboardtwo.css">
   <link rel="stylesheet" href="/Dashboard/dashboardthree.css">
   <link rel="stylesheet" href="/Dashboard/dashboardfour.css">
+  <link rel="stylesheet" href="/Dashboard/canvasmove.css">
   <link rel="stylesheet" href="/Dashboard/themes.css">
 </head>
 <body class="theme-galactic" data-theme="galactic">
@@ -187,9 +188,11 @@
   </div>
 </div>
 
-<!-- CRITICAL: Add this console test to verify buttons work -->
+<!-- NOTE: Fluid controls and canvas indicator are created dynamically by dashboardfour.js -->
+<!-- DO NOT add them here to avoid duplicates -->
+
+<!-- Emergency button setup -->
 <script>
-  // Emergency button fix - runs immediately when page loads
   window.addEventListener('DOMContentLoaded', () => {
     console.log('Emergency button setup starting...');
 
@@ -200,7 +203,6 @@
       attempts++;
       console.log(`Setup attempt ${attempts}`);
 
-      // Create task button
       const createBtn = document.getElementById('createTaskBtn');
       if (createBtn && !createBtn.dataset.emergency) {
         createBtn.onclick = (e) => {
@@ -216,7 +218,6 @@
         console.log('Emergency create button setup');
       }
 
-      // Filter buttons
       const filters = [
         ['filterAllBtn', 'all'],
         ['filterCompletedBtn', 'completed'],
@@ -231,12 +232,10 @@
             e.preventDefault();
             console.log(`EMERGENCY: Filter ${filter} clicked`);
 
-            // Remove active from all
             document.querySelectorAll('.floating-action-item[data-filter]').forEach(b => {
               b.classList.remove('active');
             });
 
-            // Add active to this one
             btn.classList.add('active');
 
             if (window.dashboard && window.dashboard.applyFluidFilter) {
@@ -250,7 +249,6 @@
         }
       });
 
-      // Check if we got all buttons
       const allButtons = [
         'createTaskBtn', 'filterAllBtn', 'filterCompletedBtn',
         'filterInProgressBtn', 'filterHighPriorityBtn'
@@ -278,7 +276,9 @@
 <script src="/Dashboard/dashboard.js"></script>
 <script src="/Dashboard/dashboardtwo.js"></script>
 <script src="/Dashboard/dashboardthree.js"></script>
-<script src="/Dashboard/Fluidmode/fluid.js"></script>
+<script src="/Dashboard/dashboardfour.js"></script>
+<script src="/Dashboard/dashboardfive.js"></script>
+<script src="/Dashboard/canvasmove.js"></script> <!-- NEW -->
 <script src="/Dashboard/resize.js"></script>
 <script src="/Dashboard/taskbox.js"></script>
 <script src="/Dashboard/integration.js"></script>

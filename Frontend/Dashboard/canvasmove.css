@@ -1,0 +1,76 @@
+/* ===== CANVASMOVE.CSS - Infinite Canvas Styles ===== */
+
+/* Expanded canvas for panning in fluid mode */
+body.fluid-mode .tasks-container {
+    width: 300vw;
+    height: 300vh;
+    cursor: grab;
+}
+
+body.fluid-mode .tasks-container:active {
+    cursor: grabbing;
+}
+
+/* Expanded grid overlay */
+body.fluid-mode .fluid-grid-overlay {
+    width: 300vw;
+    height: 300vh;
+}
+
+/* Canvas position indicator */
+.canvas-position-indicator {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    z-index: 1100;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.canvas-position-indicator.show {
+    opacity: 1;
+}
+
+.canvas-position-indicator::before {
+    content: '🗺️';
+    font-size: 1rem;
+}
+
+/* Smooth canvas transitions */
+body.fluid-mode .task-card {
+    transition: transform 0.1s ease-out, box-shadow 0.2s ease;
+}
+
+/* Welcome message stays centered when canvas moves */
+body.fluid-mode .welcome-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    body.fluid-mode .tasks-container {
+        width: 400vw;
+        height: 400vh;
+    }
+
+    body.fluid-mode .fluid-grid-overlay {
+        width: 400vw;
+        height: 400vh;
+    }
+}

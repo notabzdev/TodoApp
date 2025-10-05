@@ -126,9 +126,13 @@ if (typeof window.TaskFlowDashboard !== 'undefined') {
             const hasVisitedBefore = localStorage.getItem(`visited_${this.currentUser.id}`);
             const userTheme = this.currentUser.theme;
 
+            // Check localStorage for saved theme first
+            const localTheme = localStorage.getItem(`taskflow-theme-${this.currentUser.id}`);
+
             console.log('First time check:', {
                 hasVisitedBefore,
                 userTheme,
+                localTheme,
                 defaultTheme: userTheme === 'cosmic'
             });
 
@@ -137,7 +141,9 @@ if (typeof window.TaskFlowDashboard !== 'undefined') {
                 this.isFirstTimeUser = true;
                 this.showThemeSelection();
             } else {
-                this.applyTheme(userTheme);
+                // Use localStorage theme if available, otherwise use server theme
+                const themeToApply = localTheme || userTheme;
+                this.applyTheme(themeToApply);
             }
         }
 
@@ -178,46 +184,64 @@ if (typeof window.TaskFlowDashboard !== 'undefined') {
                 {
                     id: 'corporate',
                     name: 'Corporate',
-                    description: 'Clean, professional interface',
+                    description: 'Clean professional workspace',
                     headerColor: '#3b82f6',
                     bgGradient: 'linear-gradient(135deg, #f8fafc, #e2e8f0)',
-                    taskColor: 'rgba(30, 41, 59, 0.7)',
+                    taskColor: '#ffffff',
                     animated: false
                 },
                 {
                     id: 'nature',
                     name: 'Nature',
-                    description: 'Earthy tones with organic feel',
+                    description: 'Fresh and organic feel',
                     headerColor: '#84cc16',
                     bgGradient: 'linear-gradient(135deg, #fefdf8, #f0f4e8)',
-                    taskColor: 'rgba(54, 83, 20, 0.7)',
+                    taskColor: '#ffffff',
                     animated: false
                 },
                 {
                     id: 'dark',
                     name: 'Dark Mode',
-                    description: 'Sleek dark interface, easy on the eyes',
+                    description: 'Easy on the eyes',
                     headerColor: '#8b5cf6',
                     bgGradient: 'linear-gradient(135deg, #111827, #1f2937)',
-                    taskColor: 'rgba(209, 213, 219, 0.7)',
+                    taskColor: 'rgba(31, 41, 55, 0.8)',
                     animated: false
                 },
                 {
                     id: 'sky',
                     name: 'Sky Dreams',
-                    description: 'Peaceful clouds and azure skies',
+                    description: 'Floating in the clouds',
                     headerColor: '#0ea5e9',
                     bgGradient: 'linear-gradient(135deg, #87CEEB, #E0F6FF)',
-                    taskColor: 'rgba(30, 58, 138, 0.7)',
+                    taskColor: 'rgba(255, 255, 255, 0.9)',
                     animated: true
                 },
                 {
                     id: 'neon',
-                    name: 'Neon City',
-                    description: 'Cyberpunk vibes with electric colors',
+                    name: 'Neon Nights',
+                    description: 'Cyberpunk vibes',
                     headerColor: '#ff0080',
                     bgGradient: 'linear-gradient(135deg, #0a0a0a, #1a0a1a)',
-                    taskColor: 'rgba(0, 255, 255, 0.6)',
+                    taskColor: 'rgba(0, 0, 0, 0.8)',
+                    animated: true
+                },
+                {
+                    id: 'pinkblack',
+                    name: 'Pink & Black',
+                    description: 'Bold and elegant',
+                    headerColor: '#ec4899',
+                    bgGradient: 'linear-gradient(135deg, #0a0a0a, #1a0a1a, #2d1b2d)',
+                    taskColor: 'rgba(236, 72, 153, 0.1)',
+                    animated: false
+                },
+                {
+                    id: 'flowers',
+                    name: 'Blooming Garden',
+                    description: 'Floral paradise',
+                    headerColor: '#f472b6',
+                    bgGradient: 'linear-gradient(135deg, #fdf2f8, #fce7f3, #fbcfe8)',
+                    taskColor: 'rgba(255, 255, 255, 0.95)',
                     animated: true
                 }
             ];
@@ -250,9 +274,12 @@ if (typeof window.TaskFlowDashboard !== 'undefined') {
             console.log('Applying theme:', theme);
 
             const body = document.body;
-            body.classList.remove('theme-galactic', 'theme-corporate', 'theme-nature', 'theme-dark', 'theme-sky', 'theme-neon');
+            body.classList.remove('theme-galactic', 'theme-corporate', 'theme-nature', 'theme-dark', 'theme-sky', 'theme-neon', 'theme-pinkblack', 'theme-flowers');
             body.classList.add(`theme-${theme}`);
             body.dataset.theme = theme;
+
+            // Save theme to localStorage as fallback
+            localStorage.setItem(`taskflow-theme-${this.currentUser.id}`, theme);
 
             if (this.currentUser && theme !== this.currentUser.theme) {
                 try {
@@ -268,11 +295,48 @@ if (typeof window.TaskFlowDashboard !== 'undefined') {
                     if (response.ok) {
                         this.currentUser.theme = theme;
                         console.log('Theme saved to server');
+                    } else {
+                        // Server might not recognize new theme, but localStorage will handle it
+                        console.log('Theme saved locally, server may not support this theme yet');
                     }
                 } catch (error) {
-                    console.error('Failed to save theme:', error);
+                    console.error('Failed to save theme to server, using localStorage:', error);
                 }
             }
+        }
+
+        saveTaskColor(taskId, color) {
+            if (!taskId || !this.currentUser) return;
+
+            const key = `taskflow-colors-${this.currentUser.id}`;
+            const colors = JSON.parse(localStorage.getItem(key) || '{}');
+            colors[taskId] = color;
+            localStorage.setItem(key, JSON.stringify(colors));
+
+            console.log('Task color saved:', taskId, color);
+        }
+
+        loadTaskColor(taskId) {
+            if (!taskId || !this.currentUser) return null;
+
+            const key = `taskflow-colors-${this.currentUser.id}`;
+            const colors = JSON.parse(localStorage.getItem(key) || '{}');
+            return colors[taskId] || null;
+        }
+
+        restoreTaskColors() {
+            if (!this.currentUser) return;
+
+            const taskCards = document.querySelectorAll('.task-card');
+            taskCards.forEach(card => {
+                const taskId = card.dataset.taskId;
+                const savedColor = this.loadTaskColor(taskId);
+                if (savedColor) {
+                    card.dataset.color = savedColor;
+                }
+            });
+
+            console.log('Task colors restored');
         }
 
         setupEventListeners() {
@@ -506,13 +570,14 @@ if (typeof window.TaskFlowDashboard !== 'undefined') {
             const completedClass = task.completed ? 'completed' : '';
             const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString() : '';
 
-            // Apply saved color if it exists
-            const colorStyle = task.color ? `style="background: ${task.color} !important;"` : '';
+            // Load saved color from localStorage
+            const savedColor = this.loadTaskColor(task.id);
+            const colorAttr = savedColor ? `data-color="${savedColor}"` : '';
 
             return `
         <div class="task-card ${typeClass} ${priorityClass} ${completedClass}" 
              data-task-id="${task.id}" 
-             ${colorStyle}>
+             ${colorAttr}>
             <div class="task-header">
                 <div class="task-left">
                     <button class="task-action-btn complete-btn" title="${task.completed ? 'Mark Incomplete' : 'Mark Complete'}">
@@ -929,17 +994,18 @@ if (!window.dashboard) {
         window.dashboard = new TaskFlowDashboard();
     });
 }
-// ===== ADD THIS TO YOUR DASHBOARD INITIALIZATION =====
-// Add to dashboard.js where you initialize the dashboard (usually in DOMContentLoaded)
 
-// After creating dashboard instance (e.g., window.dashboard = new TaskFlowDashboard())
-
-// Initialize expanded groups set if it doesn't exist
 // ===== FIXED INITIALIZATION - DASHBOARD COLOR PERSISTENCE =====
 
 // Ensure expandedGroups set exists
-if (!window.dashboard.expandedGroups) {
-    window.dashboard.expandedGroups = new Set();
+if (!window.dashboard) {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            if (window.dashboard && !window.dashboard.expandedGroups) {
+                window.dashboard.expandedGroups = new Set();
+            }
+        }, 100);
+    });
 }
 
 // Run restores after dashboard is initialized
@@ -961,23 +1027,25 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Wrap renderTasks to restore after each render
-const originalRenderTasks = window.dashboard?.renderTasks;
-if (originalRenderTasks) {
-    window.dashboard.renderTasks = function() {
-        originalRenderTasks.call(this);
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (window.dashboard && window.dashboard.renderTasks) {
+            const originalRenderTasks = window.dashboard.renderTasks;
+            window.dashboard.renderTasks = function() {
+                originalRenderTasks.call(this);
 
-        // Always restore colors and expansions after rendering
-        setTimeout(() => {
-            if (this.restoreTaskColors) {
-                this.restoreTaskColors();
-            }
-            if (this.restoreExpandedGroups) {
-                this.restoreExpandedGroups();
-            }
-        }, 50);
-    };
-}
+                // Always restore colors and expansions after rendering
+                setTimeout(() => {
+                    if (this.restoreTaskColors) {
+                        this.restoreTaskColors();
+                    }
+                    if (this.restoreExpandedGroups) {
+                        this.restoreExpandedGroups();
+                    }
+                }, 50);
+            };
+        }
+    }, 600);
+});
 
 // ===== END OF FIXED INITIALIZATION =====
-
-// ===== END OF INITIALIZATION CODE =====

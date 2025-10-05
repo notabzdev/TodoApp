@@ -1,5 +1,5 @@
 // Fluid Mode Core Functionality - dashboardfour.js
-// ACTUALLY WORKING VERSION - Fixes all reported issues
+// FIXED VERSION - Includes canvas reset button
 
 Object.assign(TaskFlowDashboard.prototype, {
     initFluidMode() {
@@ -7,7 +7,6 @@ Object.assign(TaskFlowDashboard.prototype, {
             return;
         }
 
-        // Initialize fluid mode properties
         this.fluidModeEnabled = false;
         this.isGridVisible = false;
         this.draggedTask = null;
@@ -68,17 +67,21 @@ Object.assign(TaskFlowDashboard.prototype, {
         `;
         document.body.appendChild(settingsModal);
 
+        // FIXED: Create fluid controls with canvas reset button
         const fluidControls = document.createElement('div');
         fluidControls.className = 'fluid-controls';
         fluidControls.innerHTML = `
             <button class="fluid-control-btn" id="toggleGrid" title="Toggle Micro Grid">
-                <span>Grid</span>
+                <span>📐</span>
             </button>
-            <button class="fluid-control-btn" id="resetPositions" title="Reset Positions">
-                <span>Reset</span>
+            <button class="fluid-control-btn" id="resetPositions" title="Reset Task Positions">
+                <span>🔄</span>
             </button>
             <button class="fluid-control-btn" id="arrangeAuto" title="Auto Arrange">
-                <span>Auto</span>
+                <span>✨</span>
+            </button>
+            <button class="fluid-control-btn reset-canvas" id="resetCanvas" title="Reset Canvas Position">
+                <span>⌖</span>
             </button>
         `;
         document.body.appendChild(fluidControls);
@@ -87,6 +90,13 @@ Object.assign(TaskFlowDashboard.prototype, {
         gridOverlay.className = 'fluid-grid-overlay';
         gridOverlay.id = 'fluidGridOverlay';
         document.body.appendChild(gridOverlay);
+
+        // Create canvas position indicator
+        const canvasIndicator = document.createElement('div');
+        canvasIndicator.className = 'canvas-position-indicator';
+        canvasIndicator.id = 'canvasPositionIndicator';
+        canvasIndicator.innerHTML = '<span id="canvasCoords">X: 0, Y: 0</span>';
+        document.body.appendChild(canvasIndicator);
     },
 
     setupFluidModeEventListeners() {
@@ -146,16 +156,14 @@ Object.assign(TaskFlowDashboard.prototype, {
             modal.dataset.fluidListener = 'true';
         }
 
-        // Setup floating action bar - CRITICAL FIX
+        // Setup floating action bar
         this.setupWorkingFloatingActionBar();
     },
 
     setupWorkingFloatingActionBar() {
         console.log('Setting up WORKING floating action bar...');
 
-        // Wait for elements to exist, then set up
         const setupButtons = () => {
-            // Create task button - FIXED
             const createBtn = document.getElementById('createTaskBtn');
             if (createBtn) {
                 createBtn.onclick = (e) => {
@@ -167,7 +175,6 @@ Object.assign(TaskFlowDashboard.prototype, {
                 console.log('Create button connected');
             }
 
-            // Filter buttons - FIXED
             const filterMap = {
                 'filterAllBtn': 'all',
                 'filterCompletedBtn': 'completed',
@@ -189,7 +196,6 @@ Object.assign(TaskFlowDashboard.prototype, {
             });
         };
 
-        // Run immediately and after delay
         setupButtons();
         setTimeout(setupButtons, 500);
         setTimeout(setupButtons, 1000);
@@ -198,7 +204,6 @@ Object.assign(TaskFlowDashboard.prototype, {
     applyFluidFilter(filterType) {
         console.log(`Applying fluid filter: ${filterType}`);
 
-        // Update active state
         document.querySelectorAll('.floating-action-item[data-filter]').forEach(btn => {
             btn.classList.remove('active');
         });
@@ -208,7 +213,6 @@ Object.assign(TaskFlowDashboard.prototype, {
             activeBtn.classList.add('active');
         }
 
-        // Filter tasks
         let filteredTasks = [...this.tasks];
         if (filterType !== 'all') {
             filteredTasks = this.tasks.filter(task => {
@@ -221,7 +225,6 @@ Object.assign(TaskFlowDashboard.prototype, {
             });
         }
 
-        // Render tasks
         const container = document.getElementById('tasksContainer');
         if (filteredTasks.length === 0) {
             container.innerHTML = `
@@ -235,7 +238,6 @@ Object.assign(TaskFlowDashboard.prototype, {
             container.innerHTML = tasksHTML;
             this.setupTaskEventListeners();
 
-            // Make draggable if in fluid mode
             if (this.fluidModeEnabled) {
                 setTimeout(() => {
                     if (this.makeTasksDraggable) this.makeTasksDraggable();
@@ -261,7 +263,6 @@ Object.assign(TaskFlowDashboard.prototype, {
             highPriority: this.tasks.filter(task => task.priority === 'high').length
         };
 
-        // Update floating badges
         const badges = [
             ['allCount', counts.all],
             ['completedCount', counts.completed],
@@ -274,7 +275,6 @@ Object.assign(TaskFlowDashboard.prototype, {
             if (el) el.textContent = count;
         });
 
-        // Update sidebar badges
         const sidebarBadges = [
             ['allCountSidebar', counts.all],
             ['completedCountSidebar', counts.completed],
@@ -342,7 +342,7 @@ Object.assign(TaskFlowDashboard.prototype, {
 
         setTimeout(() => {
             this.applyFluidFilter(this.activeFilter);
-            this.setupWorkingFloatingActionBar(); // Re-setup buttons
+            this.setupWorkingFloatingActionBar();
         }, 300);
 
         this.showNotification('Fluid mode enabled!', 'success');
@@ -396,7 +396,6 @@ Object.assign(TaskFlowDashboard.prototype, {
         );
     },
 
-    // FIXED: Proper settings save/load
     saveFluidModeSettings() {
         if (!this.currentUser) return;
 
@@ -427,7 +426,6 @@ Object.assign(TaskFlowDashboard.prototype, {
 
                 console.log('LOADED fluid settings:', settings);
 
-                // Apply loaded state
                 if (this.fluidModeEnabled) {
                     setTimeout(() => {
                         this.enterFluidMode();
@@ -441,7 +439,6 @@ Object.assign(TaskFlowDashboard.prototype, {
         this.loadTaskPositionsFromStorage();
     },
 
-    // FIXED: Task position save/load
     saveTaskPosition(taskId, x, y) {
         if (!this.currentUser) return;
 
@@ -486,9 +483,8 @@ Object.assign(TaskFlowDashboard.prototype, {
         }
     },
 
-    // Placeholder methods for dragging
     makeTasksDraggable() {
-        console.log('makeTasksDraggable - to be implemented in dashboardfive.js');
+        console.log('makeTasksDraggable - implemented in dashboardfive.js');
     },
 
     removeTaskDraggable() {
@@ -501,7 +497,7 @@ Object.assign(TaskFlowDashboard.prototype, {
     },
 
     loadTaskPositions() {
-        console.log('loadTaskPositions - to be implemented in dashboardfive.js');
+        console.log('loadTaskPositions - implemented in dashboardfive.js');
     },
 
     resetTaskPositions() {

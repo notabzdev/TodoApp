@@ -1,4 +1,5 @@
 // ===== FLUID MODE - OPTIMIZED =====
+// Task dragging, resizing, and positioning (Canvas drag removed - see canvasmove.js)
 
 Object.assign(TaskFlowDashboard.prototype, {
     // ========== DRAGGING ==========
@@ -18,7 +19,7 @@ Object.assign(TaskFlowDashboard.prototype, {
 
         let isDragging = false;
         let startX, startY, initialLeft, initialTop;
-        let lastValidPosition = { left: 0, top: 0 }; // Store last valid position
+        let lastValidPosition = { left: 0, top: 0 };
 
         const onMouseDown = (e) => {
             if (taskElement.classList.contains('pinned') ||
@@ -32,13 +33,13 @@ Object.assign(TaskFlowDashboard.prototype, {
             initialLeft = parseInt(taskElement.style.left) || 0;
             initialTop = parseInt(taskElement.style.top) || 0;
 
-            // Store current position as last valid
             lastValidPosition = { left: initialLeft, top: initialTop };
 
             taskElement.classList.add('dragging');
             document.body.style.cursor = 'grabbing';
             document.body.style.userSelect = 'none';
             e.preventDefault();
+            e.stopPropagation();
         };
 
         const onMouseMove = (e) => {
@@ -60,7 +61,6 @@ Object.assign(TaskFlowDashboard.prototype, {
 
             const hasCollision = this.checkTaskCollisions(taskElement);
 
-            // If no collision, update last valid position
             if (!hasCollision) {
                 lastValidPosition = { left: newLeft, top: newTop };
             }
@@ -71,12 +71,10 @@ Object.assign(TaskFlowDashboard.prototype, {
 
             const hasCollision = this.checkTaskCollisions(taskElement);
 
-            // If there's a collision on release, return to last valid position with shake
             if (hasCollision) {
                 taskElement.style.left = lastValidPosition.left + 'px';
                 taskElement.style.top = lastValidPosition.top + 'px';
 
-                // Add shake animation
                 taskElement.classList.add('collision-shake');
                 taskElement.style.border = '2px solid #ef4444';
 
@@ -137,7 +135,7 @@ Object.assign(TaskFlowDashboard.prototype, {
         draggedTask.classList.toggle('collision-warning', hasCollision);
         if (!hasCollision) draggedTask.classList.remove('hovering-over-task');
 
-        return hasCollision; // Return collision state
+        return hasCollision;
     },
 
     // ========== RESIZE ==========
@@ -184,10 +182,6 @@ Object.assign(TaskFlowDashboard.prototype, {
             pointer-events: none;
             z-index: 101;
             white-space: nowrap;
-            width: auto !important;
-            min-width: auto !important;
-            max-width: none !important;
-            display: inline-block;
         `;
 
         taskCard.appendChild(handle);
