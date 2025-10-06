@@ -1,6 +1,4 @@
-// ===== TASKBOX.JS - OPTIMIZED & CLEAN =====
-// Enhanced Task Box Interactions with Context Menu Features
-// Replace your entire taskbox.js with this optimized version
+
 
 Object.assign(TaskFlowDashboard.prototype, {
     // ========== INITIALIZATION ==========

@@ -1,5 +1,4 @@
-// Dashboard JavaScript - Main Class and Core Functionality
-// Emergency reset function for fluid mode issues
+//Main Class and Core Functionality
 window.resetFluidMode = function() {
     console.log('Emergency fluid mode reset');
 
@@ -1048,4 +1047,3 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 600);
 });
 
-// ===== END OF FIXED INITIALIZATION =====

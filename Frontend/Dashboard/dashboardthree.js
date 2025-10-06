@@ -1,5 +1,4 @@
-// ===== COMPLETE GROUP TASK IMPLEMENTATION - FIXED WITH SIZE PRESERVATION =====
-// Handles group tasks, subtasks, and expansion WITHOUT losing custom sizes
+
 
 Object.assign(TaskFlowDashboard.prototype, {
 
@@ -147,7 +146,7 @@ Object.assign(TaskFlowDashboard.prototype, {
         `).join('');
     },
 
-    // ========== EVENT LISTENERS ==========
+    // event LIsteners
     setupTaskEventListeners() {
         this.setupBasicTaskListeners();
         this.setupGroupTaskListeners();
@@ -233,7 +232,7 @@ Object.assign(TaskFlowDashboard.prototype, {
         });
     },
 
-    // ========== GROUP EXPANSION ==========
+    //Group expansion
     toggleGroupExpansion(groupId) {
         const taskCard = document.querySelector(`[data-task-id="${groupId}"]`);
         if (!taskCard) return;
@@ -281,7 +280,7 @@ Object.assign(TaskFlowDashboard.prototype, {
         console.log('Group expanded:', groupId);
     },
 
-    // ========== SUBTASK FORM ==========
+    //Subtaskform
     showSubtaskForm(groupId) {
         const form = document.querySelector(`.subtask-form[data-group-id="${groupId}"]`);
         if (!form) return;
@@ -503,7 +502,7 @@ Object.assign(TaskFlowDashboard.prototype, {
         }
     },
 
-    // ========== DATA LOADING ==========
+    // data loading
     async loadTasks() {
         if (this.isLoadingTasks) return;
         this.isLoadingTasks = true;
@@ -552,7 +551,7 @@ Object.assign(TaskFlowDashboard.prototype, {
         }
     },
 
-    // ========== EXPANSION STATE PERSISTENCE ==========
+    // expansion
     saveExpandedGroups() {
         if (!this.expandedGroups || !this.currentUser) return;
 
@@ -601,7 +600,7 @@ Object.assign(TaskFlowDashboard.prototype, {
     }
 });
 
-// ========== INITIALIZATION ==========
+//init
 document.addEventListener('DOMContentLoaded', () => {
     const initGroups = () => {
         if (window.dashboard) {

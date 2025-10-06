@@ -1,4 +1,4 @@
-// ===== INTEGRATION.JS - FINAL FIX =====
+
 // Works with both normal mode AND fluid mode
 
 (function() {

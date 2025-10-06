@@ -1,5 +1,4 @@
-// ===== FLUID MODE - OPTIMIZED =====
-// Task dragging, resizing, and positioning (Canvas drag removed - see canvasmove.js)
+
 
 Object.assign(TaskFlowDashboard.prototype, {
     // ========== DRAGGING ==========
@@ -138,7 +137,7 @@ Object.assign(TaskFlowDashboard.prototype, {
         return hasCollision;
     },
 
-    // ========== RESIZE ==========
+    //resize
     addFluidResizeHandle(taskCard) {
         const oldElements = taskCard.querySelectorAll('.resize-handle, .resize-handle-fluid, .resize-dimensions');
         oldElements.forEach(el => el.remove());
@@ -273,7 +272,7 @@ Object.assign(TaskFlowDashboard.prototype, {
         }
     },
 
-    // ========== POSITIONING ==========
+    //positions
     saveTaskPosition(taskElement) {
         const taskId = taskElement.dataset.taskId;
         if (!taskId) return;

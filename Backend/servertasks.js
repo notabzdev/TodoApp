@@ -3,9 +3,8 @@
 
 module.exports = function(app, db, authenticateUser) {
 
-    // ====== TASK ROUTES ======
 
-    // Get all tasks for authenticated user
+    // Get all tasks for user
     app.get('/api/tasks', authenticateUser, (req, res) => {
         console.log('\nGETTING TASKS for user:', req.user.id);
 
@@ -123,7 +122,7 @@ module.exports = function(app, db, authenticateUser) {
         const taskId = parseInt(req.params.id);
         const { title, description, priority, dueDate, type, completed, color, colorData } = req.body;
 
-        // First, verify task belongs to user
+        //verify task belongs to user
         db.get(
             'SELECT * FROM tasks WHERE id = ? AND user_id = ?',
             [taskId, req.user.id],
@@ -422,7 +421,7 @@ module.exports = function(app, db, authenticateUser) {
         const subtaskId = parseInt(req.params.id);
         const { title, completed } = req.body;
 
-        // First, verify subtask belongs to user (through parent task)
+        //verify subtask belongs to user
         db.get(
             `SELECT s.*, t.user_id
              FROM subtasks s
@@ -513,7 +512,7 @@ module.exports = function(app, db, authenticateUser) {
 
         const subtaskId = parseInt(req.params.id);
 
-        // First, verify subtask belongs to user and get current state
+        //verify subtask belongs to user and get current state
         db.get(
             `SELECT s.*, t.user_id
              FROM subtasks s
@@ -570,7 +569,7 @@ module.exports = function(app, db, authenticateUser) {
 
         const subtaskId = parseInt(req.params.id);
 
-        // Verify subtask belongs to user (through parent task) and delete
+        // Verify subtask belongs to user and delete
         db.run(
             `DELETE FROM subtasks
              WHERE id = ? AND parent_task_id IN (

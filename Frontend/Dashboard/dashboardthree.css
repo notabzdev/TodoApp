@@ -1,6 +1,3 @@
-/* ===== GROUP TASK & SUBTASK CSS - COMPLETE REWRITE ===== */
-/* NO height transitions - instant resize */
-
 /* Group Task Base */
 .task-card.task-group {
     min-height: 250px;

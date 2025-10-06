@@ -1,5 +1,4 @@
-// ===== CANVASMOVE.JS - Infinite Canvas Drag =====
-// Built from scratch - clean implementation
+// Infinite Canvas Drag
 
 (function() {
     'use strict';

@@ -1,7 +1,7 @@
-// Dashboard Task Management Functions - Part 2
+// Dashboard Task Management Functions
 // Extend the TaskFlowDashboard class with additional methods
-
 // Task Modal and CRUD Operations
+
 Object.assign(TaskFlowDashboard.prototype, {
     showTaskModal(isGroup = false, taskToEdit = null) {
         const modal = document.getElementById('taskModal');

@@ -1,5 +1,4 @@
-// Fluid Mode Core Functionality - dashboardfour.js
-// FIXED VERSION - Includes canvas reset button
+// Fluid Mode Core Functionality
 
 Object.assign(TaskFlowDashboard.prototype, {
     initFluidMode() {
